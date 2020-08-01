@@ -23,8 +23,6 @@ extern "C" %{
 #include "pastix_zcores.h"
 #include "pastix_zcuda.h"
 #include "coeftab_z.h"
-#include <cublas_v2.h>
-
 
 %}
 
@@ -49,8 +47,6 @@ cpu1d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_dat
 gpu1d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->gpu_coefs))[PastixKernelGEMMCblk2d2d][0])" ]
 cpu2d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->cpu_coefs))[PastixKernelGEMMBlok2d2d][0])" ]
 gpu2d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->gpu_coefs))[PastixKernelGEMMBlok2d2d][0])" ]
-cublas_handle [ type = "cublasHandle_t *" hidden = on default = "(sopalin_data->cublas_handle)" ]
-
 
 /**************************************************
  *                   GETRF                        *
@@ -442,13 +438,13 @@ BODY [ type=CUDA
                 gpublok_ztrsmsp( PastixLCoef, PastixRight, PastixUpper,
                                  PastixNoTrans, PastixNonUnit,
                                  cblk, m, A, C, &lowrank,
-                                 parsec_body.stream, cublas_handle );
+                                 parsec_body.stream );
             }
             else {
                 gpublok_ztrsmsp( PastixUCoef, PastixRight, PastixUpper,
                                  PastixNoTrans, PastixUnit,
                                  cblk, m, A, C, &lowrank,
-                                 parsec_body.stream, cublas_handle );
+                                 parsec_body.stream );
             }
         }
     }
@@ -671,13 +667,13 @@ BODY [ type=CUDA
                 gpublok_zgemmsp( PastixLCoef, PastixUCoef, PastixTrans,
                                  cblk, fcblk, blok_mk, nk, blok_mn,
                                  A, B, C, &lowrank,
-                                 parsec_body.stream, cublas_handle );
+                                 parsec_body.stream );
             }
             else if ( (s == 1) && (blok_mk != nk) ) {
                 gpublok_zgemmsp( PastixUCoef, PastixLCoef, PastixTrans,
                                  cblk, fcblk, blok_mk, nk, blok_mn,
                                  A, B, C, &lowrank,
-                                 parsec_body.stream, cublas_handle );
+                                 parsec_body.stream );
             }
         }
     }

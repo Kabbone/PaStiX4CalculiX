@@ -18,6 +18,7 @@
 //#include "common.h"
 #include <stdio.h>
 #include <assert.h>
+#include <cublas.h>
 #include "pastix.h"
 #include "kernels/pastix_cuda.h"
 //#include "kernels/pastix_zcores.h"

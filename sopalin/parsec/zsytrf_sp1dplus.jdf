@@ -42,8 +42,6 @@ lwork     [type = "pastix_int_t"]
 
 cpu_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->cpu_coefs))[PastixKernelGEMMCblk2d2d][0])" ]
 gpu_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->gpu_coefs))[PastixKernelGEMMCblk2d2d][0])" ]
-cublas_handle [ type = "cublasHandle_t *" hidden = on default = "(sopalin_data->cublas_handle)" ]
-cublas_stat [ type = "cublasStatus_t *" hidden = on default = "(sopalin_data->cublas_stat)" ]
 
 /**************************************************
  *                   SYTRF                        *

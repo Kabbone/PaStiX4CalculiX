@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <cuda.h>
+#include <cublas.h>
 
 #include <stdio.h>
 #include <assert.h>

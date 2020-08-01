@@ -80,16 +80,6 @@ bcsc_init_centralized( 		  pastix_data_t *pastix_data,
 void
 bcsc_restore_coltab( pastix_bcsc_t *bcsc );
 
-
-void bcsc_DSspsv( pastix_data_t      *pastix_data,
-    double *b );
-             /*    
-void bcsc_DSspmv( const pastix_data_t      *pastix_data,
-                 pastix_trans_t            trans,
-                 double        alpha,
-                 const double *x,
-                 double        beta,
-                 double       *y );*/
 /**
  * @}
  */
