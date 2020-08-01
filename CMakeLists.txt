@@ -45,9 +45,18 @@ include(CheckSystem)
 
 # Set the RPATH config
 # --------------------
-SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
+SET(CMAKE_EXE_LINKER_FLAGS " -lstdc++ -fopenmp -D_GNU_SOURCE ")
 SET(CMAKE_C_FLAGS $ENV{SCRIPT_OUT})
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fopenmp  -D_GNU_SOURCE ")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE ")
+SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ")
 
+SET(CMAKE_AR  "gcc-ar")
+#SET(CMAKE_RANLIB "gcc-ranlib")
+SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_C_ARCHIVE_FINISH   true)
+SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_CXX_ARCHIVE_FINISH   true)
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
@@ -275,13 +284,9 @@ if( PASTIX_WITH_CUDA )
         
 		set(CUDA_SEPARABLE_COMPILATION ON)
 
-<<<<<<< HEAD
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCUDA_SM_VERSION=70")
 
 
-=======
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCUDA_SM_VERSION=20")
->>>>>>> parent of 249ec09... half with debug
     else(CUDA_FOUND)
         message(FATAL_ERROR "CUDA is required but was not found. Please provide a CUDA library in your environment or configure with -DPASTIX_WITH_CUDA=OFF")
     endif (CUDA_FOUND)
@@ -653,7 +658,6 @@ set(SOURCES
   refinement/z_refine_bicgstab.c
   refinement/z_refine_functions.c
   refinement/z_refine_gmres.c
-  refinement/z_refine_gmres_gpu.c
   refinement/z_refine_grad.c
   refinement/z_refine_pivot.c
   )

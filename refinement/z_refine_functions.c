@@ -24,7 +24,10 @@
 #include "sopalin_data.h"
 #include "z_refine_functions.h"
 #include "cpu_z_spmv.h"
+
+#if defined(PASTIX_WITH_CUDA)
 #include "gpu_z_spmv.h"
+#endif
 
 /**
  *******************************************************************************

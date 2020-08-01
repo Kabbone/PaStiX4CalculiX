@@ -30,17 +30,19 @@
 #include <parsec.h>
 #include <parsec/data.h>
 #include <parsec/data_distribution.h>
+
 #if defined(PASTIX_WITH_CUDA)
 #include <cuda_runtime_api.h>
 #include <cuda.h>
 #include "kernels/gpus/LightSpMV-1.0/src/cLightSpMV.h"
 #include <parsec/devices/cuda/dev_cuda.h>
-#endif
-#include "parsec/utils/zone_malloc.h"
 
 extern gpu_device_t* gpu_device;
 extern char* gpu_base;
 
+#endif
+
+#include "parsec/utils/zone_malloc.h"
 /**
  *******************************************************************************
  *
@@ -52,13 +54,6 @@ extern char* gpu_base;
  *******************************************************************************/
 static pastix_int_t (*sopalinRefine[5][4])(pastix_data_t *pastix_data, void *x, void *b) =
 {
-    //  PastixRefineGMRES_GPU
-    {
-        s_gmres_gpu_smp,
-        d_gmres_gpu_smp,
-        c_gmres_gpu_smp,
-        z_gmres_gpu_smp
-    },
     //  PastixRefineGMRES
     {
         s_gmres_smp,
@@ -86,6 +81,15 @@ static pastix_int_t (*sopalinRefine[5][4])(pastix_data_t *pastix_data, void *x, 
         d_bicgstab_smp,
         c_bicgstab_smp,
         z_bicgstab_smp
+    //  PastixRefineGMRES_GPU
+//    #ifdef PASTIX_WITH_CUDA
+//    },
+//    {
+//        s_gmres_gpu_smp,
+//        d_gmres_gpu_smp,
+//        c_gmres_gpu_smp,
+//        z_gmres_gpu_smp
+//    #endif
     }
 };
 
@@ -166,106 +170,26 @@ pastix_subtask_refine( pastix_data_t *pastix_data,
         }
     }
 
-    clockStart(timer);
-    {
-        pastix_int_t (*refinefct)(pastix_data_t *, void *, void *) = sopalinRefine[iparm[IPARM_REFINEMENT]][1];
-        
-		void *xptr = (char *)(*x);
-		void *bptr = (char *)(*b);
-		
-        if(iparm[66] == 2){
-			
-			double *xptrD = (double*) malloc(sizeof(double) * n);
-			double *bptrD = (double*) malloc(sizeof(double) * n);
-			
-			#pragma omp parallel for
-			for(int i = 0; i < n; i++){
-				xptrD[i] = (double) (((float*) xptr)[i]);
-				bptrD[i] = (double) (((float*) bptr)[i]);
-			}
-			
-			free(*x);
-			free(*b);
-			
-			*x = (char*) xptrD;
-			*b = (char*) bptrD;
-			
-			xptr = (char*) xptrD;
-			bptr = (char*) bptrD;
-			
-			pastix_data->bcsc->flttype = PastixDouble;
-			
-			int numElements = bcsc->numElements;
-			
-			double* L_new = (double*) malloc(sizeof(double) * numElements);
-			float* L_old = (float*) bcsc->Lvalues;			
-			bcsc->Lvalues = L_new;
-			
-			for(int i = 0; i < numElements; i++){
-				L_new[i] = (double) L_old[i];
-			}
-			free(L_old);
-			
-			float* U_old = (float*) bcsc->Uvalues;
-			
-			if(bcsc->Uvalues){
-				double* U_new = (double*) malloc(sizeof(double) * numElements);
-				bcsc->Uvalues = U_new;
-				
-				for(int i = 0; i < numElements; i++){
-					U_new[i] = (double) U_old[i];
-				}
-				free(U_old);
-			}
-			
-			SolverCblk* cblktab = pastix_data->solvmatr->cblktab;
-			int numCblks = pastix_data->solvmatr->cblknbr;
-			
-			for(int i = 0; i < numCblks; i++){
-				int cblksize = (cblktab[i].lcolnum - cblktab[i].fcolnum + 1) * cblktab[i].stride;
-
-				float* L_old = (float*) (cblktab[i].lcoeftab);
-				double* L_new = (double*) malloc(sizeof(double) * cblksize);
-
-				for( int j = 0; j < cblksize; j++){
-					L_new[j] = (double) L_old[j];
-				}
-				free(L_old);
-				cblktab[i].lcoeftab = L_new;
-				
-				float* U_old = (float*) (cblktab[i].ucoeftab);
-				if(U_old){
-					double* U_new = (double*) malloc(sizeof(double) * cblksize);
-
-					for( int j = 0; j < cblksize; j++){
-						U_new[j] = (double) U_old[j];
-					}
-					free(U_old);
-					cblktab[i].ucoeftab = U_new;
-				}
-			}
-		}
-        size_t shiftx, shiftb;
-        int i;
-
-	shiftx = ldx * pastix_size_of( PastixDouble );
-	shiftb = ldb * pastix_size_of( PastixDouble );
-
-	for(i=0; i<nrhs; i++, xptr += shiftx, bptr += shiftb ) {
-		pastix_int_t it;
-		it = refinefct( pastix_data, xptr, bptr);
-		if(it == -1)
-			return -1;
-		pastix_data->iparm[IPARM_NBITER] = pastix_imax( it, pastix_data->iparm[IPARM_NBITER] );
-	}
-    clockStop(timer);
-
-    pastix_data->dparm[DPARM_REFINE_TIME] = clockVal(timer);
-    if (iparm[IPARM_VERBOSE] > PastixVerboseNot) {
-        pastix_print( 0, 0, OUT_TIME_REFINE,
-                      pastix_data->dparm[DPARM_REFINE_TIME] );
+    void *xptr = (char *)(x);
+    void *bptr = (char *)(b);
+    
+    pastix_int_t (*refinefct)(pastix_data_t *, void *, void *) = sopalinRefine[iparm[IPARM_REFINEMENT]][1];
+    
+    size_t shiftx, shiftb;
+    int i;
+    
+    shiftx = ldx * pastix_size_of( PastixDouble );
+    shiftb = ldb * pastix_size_of( PastixDouble );
+    
+    for(i=0; i<nrhs; i++, xptr += shiftx, bptr += shiftb ) {
+    	pastix_int_t it;
+    	it = refinefct( pastix_data, xptr, bptr);
+    	if(it == -1)
+    		return -1;
+    	pastix_data->iparm[IPARM_NBITER] = pastix_imax( it, pastix_data->iparm[IPARM_NBITER] );
     }
-
+    
+    
     (void)n;
     return PASTIX_SUCCESS;
 }

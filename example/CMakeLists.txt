@@ -13,7 +13,7 @@ include(GenPkgConfig)
 add_subdirectory(old)
 
 set (INTERNAL_EXAMPLES
-  dump_rank.c
+  #dump_rank.c
   ordering_grid.c
   )
 

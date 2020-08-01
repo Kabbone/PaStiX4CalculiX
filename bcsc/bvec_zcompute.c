@@ -23,8 +23,12 @@
 #include "bcsc_z.h"
 #include "frobeniusupdate.h"
 #include "cblas.h"
+
+#if defined(PASTIX_WITH_CUDA)
 #include <cuda_runtime_api.h>
 #include <cuda.h>
+#endif
+
 /**
  *******************************************************************************
  *

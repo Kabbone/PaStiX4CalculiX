@@ -462,6 +462,7 @@
 #define OUT_REFINE_ITER_NORM  "%ld\n%lf\n"
 #define OUT_PREC1             "%lf\n"
 #define OUT_PREC2             "%lf\n"
+#define OUT_TIME_CAST         "%lf \n"
 #define OUT_TIME_REFINE       "%lf \n"
 #define OUT_END               "\n"
 

@@ -16,9 +16,12 @@
  **/
 
 #include "pastix.h"
+
+#if defined(PASTIX_WITH_GPU)
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#endif
                         
 void
 gpu_z_spmv(		pastix_int_t n, 

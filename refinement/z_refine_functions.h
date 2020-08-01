@@ -53,7 +53,9 @@ struct z_solver
 void z_refine_init(struct z_solver *, pastix_data_t*);
 
 pastix_int_t z_gmres_smp   ( pastix_data_t *pastix_data, void *x, void *b);
+#ifdef PASTIX_WITH_CUDA
 pastix_int_t z_gmres_gpu_smp   ( pastix_data_t *pastix_data, void *x, void *b);
+#endif
 pastix_int_t z_grad_smp    ( pastix_data_t *pastix_data, void *x, void *b);
 pastix_int_t z_pivot_smp   ( pastix_data_t *pastix_data, void *x, void *b);
 pastix_int_t z_bicgstab_smp( pastix_data_t *pastix_data, void *x, void *b);
