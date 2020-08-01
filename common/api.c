@@ -779,16 +779,16 @@ pastixFinalize( pastix_data_t **pastix_data )
     ischedFinalize( pastix->isched );
     
     
-	if( pastix->cublas_handle != NULL){
 		
 #ifdef PASTIX_WITH_CUDA
+	if( pastix->cublas_handle != NULL){
 		cublasDestroy(*(pastix->cublas_handle));
 		
 		free(pastix->cublas_handle);
 		free(pastix->cublas_stat);
+    }
 #endif
 		
-	}
 
     if ( pastix->graph != NULL )
     {

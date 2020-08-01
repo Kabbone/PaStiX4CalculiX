@@ -31,11 +31,13 @@
 #include <parsec/data_distribution.h>
 #if defined(PASTIX_WITH_CUDA)
 #include <parsec/devices/cuda/dev_cuda.h>
-#endif
-#include "parsec/utils/zone_malloc.h"
 
 gpu_device_t* gpu_device = NULL;
 char* gpu_base = NULL;
+
+#endif
+
+#include "parsec/utils/zone_malloc.h"
 
 #if defined(PASTIX_DEBUG_SOLVE)
 #include <z_spm.h>
@@ -524,7 +526,6 @@ pastix_task_solve( pastix_data_t *pastix_data,
                    pastix_int_t nrhs, void *b, pastix_int_t ldb )
 {
     pastix_bcsc_t *bcsc;
-	pastix_int_t i;
 
     /*
      * Check parameters

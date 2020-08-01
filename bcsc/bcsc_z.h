@@ -18,6 +18,7 @@
 
 
 
+#if defined(PASTIX_WITH_CUDA)
 void transpose_z_Matrix(pastix_int_t 		n,
 						pastix_int_t* 		colptrIn, 
 						pastix_int_t* 		rowptrIn, 
@@ -35,6 +36,7 @@ void permute_z_Matrix(pastix_int_t		n,
 					  pastix_int_t* 	rowptrOut, 
 					  cuDoubleComplex*  valuesOut,
 					  pastix_int_t* 	sorttab);
+#endif
 					  
 /**
  * @addtogroup bcsc_internal

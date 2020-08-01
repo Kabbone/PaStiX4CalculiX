@@ -29,10 +29,10 @@
 #include <parsec/data_distribution.h>
 #if defined(PASTIX_WITH_CUDA)
 #include <parsec/devices/cuda/dev_cuda.h>
-#endif
 
 #include <cuda_runtime.h>
 #include <cblas.h>
+#endif
 #include <lapacke.h>
 
 #if !defined(DOXYGEN_SHOULD_SKIP_THIS)

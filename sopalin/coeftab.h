@@ -41,7 +41,7 @@ typedef void (*coeftab_fct_memory_t)( SolverMatrix * );
 /**
  * @brief List of functions to compute the memory gain in low-rank per precision.
  */
-coeftab_fct_memory_t coeftabMemory[4];
+extern coeftab_fct_memory_t coeftabMemory[4];
 
 /**
  * @}

@@ -16,12 +16,15 @@
  * @precisions normal z -> c d s
  *
  **/
+#if defined(PASTIX_WITH_GPU)
 #include "common.h"
 #include "cblas.h"
 #include "bcsc.h"
 #include "z_refine_functions.h"
+
 #include <cuda_runtime_api.h>
 #include <cuda.h>
+
 #include "pastix/order.h"
 
 /**
@@ -480,3 +483,4 @@ pastix_int_t z_gmres_gpu_smp(pastix_data_t *pastix_data, void *x, void *b)
 
     return iters;
 }
+#endif

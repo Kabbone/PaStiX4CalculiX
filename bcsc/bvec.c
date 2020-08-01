@@ -19,13 +19,16 @@
 #include <parsec.h>
 #include <parsec/data.h>
 #include <parsec/data_distribution.h>
+
 #if defined(PASTIX_WITH_CUDA)
 #include <parsec/devices/cuda/dev_cuda.h>
-#endif
-#include "parsec/utils/zone_malloc.h"
 
 extern gpu_device_t* gpu_device;
 extern char* gpu_base;
+
+#endif
+
+#include "parsec/utils/zone_malloc.h"
 
 /**
  *******************************************************************************

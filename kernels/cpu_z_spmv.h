@@ -16,9 +16,6 @@
  **/
 
 #include "pastix.h"
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime_api.h>
 
 void
 cpu_z_spmv(		pastix_int_t n, 
