@@ -18,8 +18,6 @@
 #include "isched.h"
 #include "symbol.h"
 #include "queue.h"
-#include <cublas_v2.h>
-#include <cuda_runtime.h>
 
 /*
  * Steps of the pastix solver
@@ -89,9 +87,6 @@ struct pastix_data_s {
 
     pastix_model_t  *cpu_models;         /**< CPU model coefficients for the kernels                              */
     pastix_model_t  *gpu_models;         /**< GPU model coefficients for the kernels                              */
-    cublasHandle_t *cublas_handle;
-    cublasStatus_t *cublas_stat;
-    cudaStream_t    streamGPU;
 
     char            *dirtemp;            /**< Unique directory name to store output files                         */
 

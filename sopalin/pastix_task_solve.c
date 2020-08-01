@@ -243,8 +243,6 @@ pastix_subtask_trsm( pastix_data_t *pastix_data,
     }
 
     sopalin_data.solvmtx = pastix_data->solvmatr;
-    sopalin_data.cublas_handle = pastix_data->cublas_handle;
-    sopalin_data.cublas_stat = pastix_data->cublas_stat;
 
     switch (flttype) {
     case PastixComplex64:
@@ -328,8 +326,6 @@ pastix_subtask_diag( pastix_data_t *pastix_data, pastix_coeftype_t flttype,
     }
 
     sopalin_data.solvmtx = pastix_data->solvmatr;
-    sopalin_data.cublas_handle = pastix_data->cublas_handle;
-    sopalin_data.cublas_stat = pastix_data->cublas_stat;
 
     switch (flttype) {
     case PastixComplex64:

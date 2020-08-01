@@ -21,11 +21,13 @@
 #include "kernels_trace.h"
 #include "pastix_zcuda.h"
 #include "pastix_cuda.h"
+#include <cublas.h>
+#include <cublas_api.h>
 
-static char transstr[3] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
-static char sidestr[2] = { CUBLAS_SIDE_LEFT, CUBLAS_SIDE_RIGHT };
-static char uplostr[3] = { CUBLAS_FILL_MODE_UPPER, CUBLAS_FILL_MODE_LOWER, 'A' };
-static char diagstr[2] = { CUBLAS_DIAG_NON_UNIT, CUBLAS_DIAG_UNIT };
+static char transstr[3] = { 'N', 'T', 'C' };
+static char sidestr[2] = { 'L', 'R' };
+static char uplostr[3] = { 'U', 'L', 'A' };
+static char diagstr[2] = { 'N', 'U' };
 
 long gpu_z_cblok_gemms = 0;
 long gpu_z_blok_gemms = 0;
@@ -72,7 +74,7 @@ gpu_zgemmsp_fermi( const SolverMatrix *solvmatr,
 
     C = C + ldc * ( blok->frownum - fcblk->fcolnum );
 
-    pastix_fermi_zgemmsp( CUBLAS_OP_N, transstr[trans - PastixNoTrans], M, N, K,
+    pastix_fermi_zgemmsp( 'N', transstr[trans - PastixNoTrans], M, N, K,
                           mzone, A + blok[s].coefind, lda,
                                  B + blok[0].coefind, ldb,
                           zone,  C, ldc,
@@ -355,20 +357,14 @@ gpublok_zgemmsp(       pastix_coefside_t  sideA,
                  const cuDoubleComplex   *B,
                        cuDoubleComplex   *C,
                  const pastix_lr_t       *lowrank,
-                       cudaStream_t       stream,
-					   cublasHandle_t *cublas_handle )
+                       cudaStream_t       stream )
 {
 #if defined(PRECISION_z) || defined(PRECISION_c)
     cuDoubleComplex mzone = make_cuDoubleComplex(-1.0, 0.0);
     cuDoubleComplex zone  = make_cuDoubleComplex( 1.0, 0.0);
 #else
-#if defined(PRECISION_z) || defined(PRECISION_c)
-    float mzone = -1.0;
-    float zone  =  1.0;
-#else
     double mzone = -1.0;
     double zone  =  1.0;
-#endif
 #endif
 /*
 #if defined(PRECISION_s)
@@ -423,7 +419,7 @@ gpublok_zgemmsp(       pastix_coefside_t  sideA,
     K = cblk_colnbr( cblk );
     full_m = 0;
 
-    cublasSetStream( *cublas_handle, stream );
+    cublasSetKernelStream( stream );
     bC = blokC;
     for (bA = blokA; (bA < lblokK) && (bA->fcblknm == cblk_m); bA++) {
         M = blok_rownbr(bA);
@@ -445,9 +441,9 @@ gpublok_zgemmsp(       pastix_coefside_t  sideA,
             Bptr = B + bB->coefind - offsetB;
             ldb = N;
 
-            cublasZgemm( *cublas_handle, CUBLAS_OP_N, transstr[trans - PastixNoTrans],
+            cublasZgemm( 'N', transstr[trans - PastixNoTrans],
                          M, N, K,
-                         &mzone, Aptr, lda,
+                         mzone, Aptr, lda,
                                 Bptr, ldb,
                           &zone, Cptr + (bA->frownum - bC->frownum)
                                      + (bB->frownum - fcblk->fcolnum) * ldc, ldc );
@@ -523,8 +519,7 @@ gpublok_ztrsmsp( pastix_coefside_t coef, pastix_side_t side, pastix_uplo_t uplo,
                  const cuDoubleComplex *A,
                        cuDoubleComplex *C,
                  const pastix_lr_t     *lowrank,
-                       cudaStream_t     stream,
-					   cublasHandle_t *cublas_handle )
+                       cudaStream_t     stream )
 {
 #if defined(PRECISION_z) || defined(PRECISION_c)
     cuDoubleComplex zone  = make_cuDoubleComplex( 1.0, 0.0);
@@ -557,19 +552,18 @@ gpublok_ztrsmsp( pastix_coefside_t coef, pastix_side_t side, pastix_uplo_t uplo,
     cblk_m = blok->fcblknm;
     full_m = 0;
 
-    cublasSetStream( *cublas_handle, stream );
+    cublasSetKernelStream( stream );
     for (; (blok < lblok) && (blok->fcblknm == cblk_m); blok++) {
 
         Cptr = C + blok->coefind - offset;
         M   = blok_rownbr(blok);
         ldc = M;
 
-        cublasZtrsm( *cublas_handle,
-					 sidestr[side - PastixLeft],
+        cublasZtrsm( sidestr[side - PastixLeft],
                      uplostr[uplo - PastixUpper],
                      transstr[trans - PastixNoTrans],
                      diagstr[diag - PastixNonUnit],
-                     M, N, &zone,
+                     M, N, zone,
                      A, lda,
                      Cptr, ldc );
         full_m += M;

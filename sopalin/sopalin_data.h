@@ -17,15 +17,11 @@
 #define _sopalin_data_h_
 
 #include "models.h"
-#include <cublas_v2.h>
 
 struct sopalin_data_s {
     SolverMatrix *solvmtx;
     double      (*cpu_coefs)[PastixKernelLvl1Nbr][8];
     double      (*gpu_coefs)[PastixKernelLvl1Nbr][8];
-    cublasHandle_t *cublas_handle;
-    cublasStatus_t *cublas_stat;
-
 };
 typedef struct sopalin_data_s sopalin_data_t;
 

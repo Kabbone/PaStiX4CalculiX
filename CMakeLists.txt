@@ -45,18 +45,9 @@ include(CheckSystem)
 
 # Set the RPATH config
 # --------------------
-SET(CMAKE_EXE_LINKER_FLAGS " -lstdc++ -fopenmp -D_GNU_SOURCE ")
+SET(CMAKE_EXE_LINKER_FLAGS "-lstdc++")
 SET(CMAKE_C_FLAGS $ENV{SCRIPT_OUT})
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -march=native -fopenmp -I/yaprod/cae-opensource/SLE12/packages/cuda-10.1.105/include -D_GNU_SOURCE ")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/yaprod/cae-opensource/SLE12/packages/cuda-10.1.105/targets/x86_64-linux/include -D_GNU_SOURCE ")
-SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ")
 
-SET(CMAKE_AR  "gcc-ar")
-#SET(CMAKE_RANLIB "gcc-ranlib")
-SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-SET(CMAKE_C_ARCHIVE_FINISH   true)
-SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-SET(CMAKE_CXX_ARCHIVE_FINISH   true)
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
@@ -284,9 +275,13 @@ if( PASTIX_WITH_CUDA )
         
 		set(CUDA_SEPARABLE_COMPILATION ON)
 
+<<<<<<< HEAD
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCUDA_SM_VERSION=70")
 
 
+=======
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCUDA_SM_VERSION=20")
+>>>>>>> parent of 249ec09... half with debug
     else(CUDA_FOUND)
         message(FATAL_ERROR "CUDA is required but was not found. Please provide a CUDA library in your environment or configure with -DPASTIX_WITH_CUDA=OFF")
     endif (CUDA_FOUND)
@@ -957,7 +952,6 @@ add_documented_files(
   README.md
   docs/doxygen/chapters/eztrace.doxy
   kernels/pastix_lowrank.h
-  kernels/half_prec_utility.h
   #
   include/pastix.h
   include/pastix/api.h

@@ -47,8 +47,6 @@ cpu1d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_dat
 gpu1d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->gpu_coefs))[PastixKernelGEMMCblk2d2d][0])" ]
 cpu2d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->cpu_coefs))[PastixKernelGEMMBlok2d2d][0])" ]
 gpu2d_coefs [ type = "pastix_fixdbl_t *" hidden = on default = "&((*(sopalin_data->gpu_coefs))[PastixKernelGEMMBlok2d2d][0])" ]
-cublas_handle [ type = "cublasHandle_t *" hidden = on default = "(sopalin_data->cublas_handle)" ]
-counter [type = "pastix_int_t"          hidden = on  default = 0 ]
 
 /**************************************************
  *                   SYTRF                        *
@@ -386,34 +384,37 @@ RW    C   <-  isTwoD & noskip & (first == last) ? A OneToTwoD( k, m )
 
 ; %{ return cblknbr - k; %}
 
-/*BODY [ type=CUDA */
-/*       device=%{ SolverCblk *lcblk = datacode->cblktab + k; */
-/*                 if( !isTwoD || !noskip || */
-/*                     (lcblk->cblktype & (CBLK_COMPRESSED|CBLK_IN_SCHUR)) ) */
-/*                 { */
-/*                     return -2; */
-/*                 } else { */
-/*                     return -1; */
-/*                 } */
-/*                 %} */
-/*       pushout=forced_pushout ] */
-/*#if defined(PASTIX_WITH_CUDA) */
-/*{ */
-/*    if( isTwoD && noskip ) { */
-/*        SolverCblk *cblk  = datacode->cblktab + k; */
-       /*assert( !(cblk->cblktype & CBLK_COMPRESSED ) ); */
-/*        if (!(cblk->cblktype & CBLK_IN_SCHUR)) { */
-/*            gpublok_ztrsmsp( PastixLCoef, PastixRight, PastixUpper, */
-/*                             PastixNoTrans, PastixNonUnit, */
-/*                             cblk, m, A, C, &lowrank, */
-/*                             parsec_body.stream, cublas_handle );*/
-/*                             */
-/*            gpublok_zscalo( PastixTrans, cblk, m, C, A, WS, parsec_body.stream, cublas_handle  );*/
-/*        }*/
-/*    }*/
-/*}*/
-/*#endif*/
-/*END*/
+/* BODY [ type=CUDA */
+/*        device=%{ SolverCblk *lcblk = datacode->cblktab + k; */
+/*                  if( !isTwoD || !noskip || */
+/*                      (lcblk->cblktype & (CBLK_COMPRESSED|CBLK_IN_SCHUR)) ) */
+/*                  { */
+/*                      return -2; */
+/*                  } else { */
+/*                      return -1; */
+/*                  } */
+/*                  %} */
+/*        pushout=forced_pushout ] */
+/* #if defined(PASTIX_WITH_CUDA) */
+/* { */
+/*     if( isTwoD && noskip ) { */
+/*         SolverCblk *cblk  = datacode->cblktab + k; */
+
+/*         assert( !(cblk->cblktype & CBLK_COMPRESSED ) ); */
+
+/*         if (!(cblk->cblktype & CBLK_IN_SCHUR)) { */
+/*             gpublok_ztrsmsp( PastixLCoef, PastixRight, PastixUpper, */
+/*                              PastixNoTrans, PastixNonUnit, */
+/*                              cblk, m, A, C, &lowrank, */
+/*                              parsec_body.stream ); */
+
+/*             /\* TODO: implements gpublok_zscalo *\/ */
+/*             assert(0); */
+/*         } */
+/*     } */
+/* } */
+/* #endif */
+/* END */
 
 BODY
 {
@@ -621,7 +622,7 @@ BODY [ type=CUDA
             gpublok_zgemmsp( PastixLCoef, PastixUCoef, PastixTrans,
                              cblk, fcblk, blok_mk, nk, blok_mn,
                              A, B, C, &lowrank,
-                             parsec_body.stream, cublas_handle );
+                             parsec_body.stream );
         }
         
 		counter++;

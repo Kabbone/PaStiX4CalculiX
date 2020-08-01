@@ -601,9 +601,9 @@ pastixInitWithAffinity( pastix_data_t **pastix_data,
         pastixInitParam( iparm, dparm );
     }
     
-    if(iparm[IPARM_GPU_NBR] > 0){
 		
 #ifdef PASTIX_WITH_CUDA
+    if(iparm[IPARM_GPU_NBR] > 0){
 		pastix->cublas_handle = (cublasHandle_t*) malloc(sizeof(cublasHandle_t));
 		pastix->cublas_stat = (cublasStatus_t*) malloc(sizeof(cublasStatus_t));
 		*(pastix->cublas_stat) = cublasCreate(pastix->cublas_handle);
@@ -611,7 +611,6 @@ pastixInitWithAffinity( pastix_data_t **pastix_data,
 			printf ("CUBLAS initialization failed\n");
 		}
 		cudaStreamCreate(&(pastix->streamGPU));
-#endif
 	}
 	else
 	{
@@ -619,6 +618,7 @@ pastixInitWithAffinity( pastix_data_t **pastix_data,
 		pastix->cublas_stat = NULL;
 	}
    // *(pastix->cublas_stat) = cublasSetMathMode(*(pastix->cublas_handle), CUBLAS_TENSOR_OP_MATH);
+#endif
 
     pastix->iparm = iparm;
     pastix->dparm = dparm;
