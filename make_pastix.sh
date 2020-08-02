@@ -9,10 +9,13 @@ INSTALLPATH="~/CalculiX/PaStiX/pastix"
 PARSECDIR="~/CalculiX/PaStiX/parsec"
 SCOTCHDIR="~/CalculiX/PaStiX/scotch"
 HWLOCDIR="~/CalculiX/PaStiX/hwloc"
+BLASDIR="~/CalculiX/PaStiX/openblas"
 
 cmake \
+    -DBLAS_DIR=${BLASDIR} \
+    -DHWLOC_DIR=${HWLOCDIR} \
 	-DCMAKE_INSTALL_PREFIX=${INSTALLPATH} \
-	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_BUILD_TYPE=Debug \
 	-DPASTIX_WITH_PARSEC=ON \
 	-DPARSEC_DIR=${PARSECDIR} \
 	-DSCOTCH_DIR=${SCOTCHDIR} \
