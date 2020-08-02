@@ -169,27 +169,26 @@ pastix_subtask_refine( pastix_data_t *pastix_data,
             pastix_data->dparm[DPARM_EPSILON_REFINEMENT] = 1e-12;
         }
     }
-
+    
     void *xptr = (char *)(x);
-    void *bptr = (char *)(b);
-    
-    pastix_int_t (*refinefct)(pastix_data_t *, void *, void *) = sopalinRefine[iparm[IPARM_REFINEMENT]][1];
-    
-    size_t shiftx, shiftb;
-    int i;
-    
-    shiftx = ldx * pastix_size_of( PastixDouble );
-    shiftb = ldb * pastix_size_of( PastixDouble );
-    
-    for(i=0; i<nrhs; i++, xptr += shiftx, bptr += shiftb ) {
-    	pastix_int_t it;
-    	it = refinefct( pastix_data, xptr, bptr);
-    	if(it == -1)
-    		return -1;
-    	pastix_data->iparm[IPARM_NBITER] = pastix_imax( it, pastix_data->iparm[IPARM_NBITER] );
-    }
-    
-    
+	void *bptr = (char *)(b);
+
+	pastix_int_t (*refinefct)(pastix_data_t *, void *, void *) = sopalinRefine[iparm[IPARM_REFINEMENT]][1];
+	
+	size_t shiftx, shiftb;
+	int i;
+
+	shiftx = ldx * pastix_size_of( PastixDouble );
+	shiftb = ldb * pastix_size_of( PastixDouble );
+
+	for(i=0; i<nrhs; i++, xptr += shiftx, bptr += shiftb ) {
+		pastix_int_t it;
+		it = refinefct( pastix_data, xptr, bptr);
+		if(it == -1)
+			return -1;
+		pastix_data->iparm[IPARM_NBITER] = pastix_imax( it, pastix_data->iparm[IPARM_NBITER] );
+	}
+	
     (void)n;
     return PASTIX_SUCCESS;
 }
