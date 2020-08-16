@@ -16,9 +16,12 @@
 #include "bvec.h"
 
 
+#if defined(PASTIX_WITH_PARSEC)
 #include <parsec.h>
 #include <parsec/data.h>
 #include <parsec/data_distribution.h>
+#include "parsec/utils/zone_malloc.h"
+#endif
 
 #if defined(PASTIX_WITH_CUDA)
 #include <parsec/devices/cuda/dev_cuda.h>
@@ -28,7 +31,6 @@ extern char* gpu_base;
 
 #endif
 
-#include "parsec/utils/zone_malloc.h"
 
 /**
  *******************************************************************************

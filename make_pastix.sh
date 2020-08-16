@@ -15,7 +15,7 @@ cmake \
     -DBLAS_DIR=${BLASDIR} \
     -DHWLOC_DIR=${HWLOCDIR} \
 	-DCMAKE_INSTALL_PREFIX=${INSTALLPATH} \
-	-DCMAKE_BUILD_TYPE=Debug \
+	-DCMAKE_BUILD_TYPE=Release \
 	-DPASTIX_WITH_PARSEC=ON \
 	-DPARSEC_DIR=${PARSECDIR} \
 	-DSCOTCH_DIR=${SCOTCHDIR} \
@@ -27,5 +27,5 @@ cmake \
 	-DCMAKE_C_FLAGS="-fopenmp" \
     ..
 
-make -j8
+make -j2
 make install
