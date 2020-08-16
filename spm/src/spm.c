@@ -24,9 +24,11 @@
 #include "s_spm.h"
 #include "p_spm.h"
 
+#if defined(PASTIX_WITH_PARSEC)
 #include <parsec.h>
 #include <parsec/data.h>
 #include <parsec/data_distribution.h>
+#endif
 #if defined(PASTIX_WITH_CUDA)
 #include <parsec/devices/cuda/dev_cuda.h>
 

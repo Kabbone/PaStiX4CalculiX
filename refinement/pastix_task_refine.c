@@ -27,9 +27,12 @@
 #include <spm.h>
 #include <bcsc/bcsc.h>
 
+#if defined(PASTIX_WITH_PARSEC)
 #include <parsec.h>
 #include <parsec/data.h>
 #include <parsec/data_distribution.h>
+#include "parsec/utils/zone_malloc.h"
+#endif
 
 #if defined(PASTIX_WITH_CUDA)
 #include <cuda_runtime_api.h>
@@ -42,7 +45,6 @@ extern char* gpu_base;
 
 #endif
 
-#include "parsec/utils/zone_malloc.h"
 /**
  *******************************************************************************
  *
