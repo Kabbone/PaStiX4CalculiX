@@ -15,8 +15,8 @@
 class Pastix < Formula
   desc "Parallel solver for sparse linear systems based on direct methods"
   homepage "https://gitlab.inria.fr/solverstack/pastix"
-  url "https://files.inria.fr/pastix/releases/v6/pastix-6.3.2.tar.gz"
-  sha256 "c4da8802d1933eecf8c09d7e63c014c81ccf353fe623142e9f5c5fc65ed82ee0"
+  url "https://files.inria.fr/pastix/releases/v6/pastix-6.4.0.tar.gz"
+  sha256 "891d426188eed56c1075fb34d2d80132593a1536ffc05cf333567f68a4811e55"
   head "https://gitlab.inria.fr/solverstack/pastix.git"
   license "LGPL"
 
@@ -29,8 +29,6 @@ class Pastix < Formula
   depends_on "starpu" => :optional # Enable STARPU runtime
   depends_on "gcc"    => :build    # GNU Fortran is now provided as part of GCC
   depends_on "cmake"  => :build
-
-  conflicts_with "pastix64", because: "not compatible"
 
   def install
     ENV.append "LDFLAGS", "-Wl,-ld_classic"

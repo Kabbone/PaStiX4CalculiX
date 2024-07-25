@@ -4,7 +4,7 @@
 #  @copyright 2013-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 #                       Univ. Bordeaux. All rights reserved.
 #
-#  @brief Homebrew formula for StarPU 1.3.*
+#  @brief Homebrew formula for StarPU 1.4.*
 #
 #  @version 6.4.0
 #  @author Pierre Ramet
