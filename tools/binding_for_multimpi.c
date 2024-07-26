@@ -7,9 +7,10 @@
  *  @version 6.4.0
  *  @author Pierre Ramet
  *  @author Mathieu Faverge
+ *  @author Alycia Lisito
  *  @date 2024-07-05
  *
- * Small test to see what's the bindtab array should look like in case of
+ * @brief Small test to see what's the bindtab array should look like in case of
  * multiple MPI processes per node.
  * This test can be compiled with:
  *    mpicc binding_for_multimpi.c -o binding_for_multimpi -Wall -lpthread -lhwloc
@@ -63,7 +64,6 @@ int main( int argc, char *argv[] )
     MPI_Comm_size( MPI_COMM_WORLD, &world_size );
     MPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
     key = world_rank;
-
 
     /**
      * Section that need to be added to the code to generate the bindtab arrays
