@@ -1,0 +1,128 @@
+###
+#
+# @file gdbinit
+#
+# @copyright 2013-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+#                      Univ. Bordeaux. All rights reserved.
+#
+# @version 6.4.0
+# @author Mathieu Faverge
+# @date 2024-07-09
+#
+###
+#
+# To set a breakpoint when starting gdb with option "-ex run", here
+# what you need to do:
+#set breakpoint pending on
+#
+# Example for a line of code
+#break d_spm_tests.c:393
+#
+# Example for a given function
+#break s_spmGenRHS
+
+define pastix-print-blok-header
+  set language c
+  if ( $arg0 )
+    printf "%4s ", "Id"
+  end
+  printf "%7s, ", "gbloknm"
+  printf "%7s, ", "lcblknm"
+  printf "%7s, ", "fcblknm"
+  printf "%5s-%5s, ", "frow", "lrow"
+  printf "%9s%10s", "handler", " "
+  printf "\n"
+end
+
+define pastix-print-blok-one
+  set language c
+  set $blok = (SolverBlok *) ($arg0)
+  printf "%7d, ", $blok->gbloknm
+  printf "%7d, ", $blok->lcblknm
+  printf "%7d, ", $blok->fcblknm
+  printf "%5d-%5d, ", $blok->frownum, $blok->lrownum
+  printf "%p-%p", $blok->handler[0], $blok->handler[1]
+  printf "\n"
+end
+
+define pastix-print-cblk-header
+  set language c
+  if ( $arg0 )
+    printf "%4s ", "Id"
+  end
+  printf "%5s, ", "Type"
+  printf "%2s, ", "2D"
+  printf "%5s-%5s, ", "fcol", "lcol"
+  printf "%7s, %7s ", "lcolidx", "bcscnum"
+  printf ", %7s", "fcblknm"
+  printf ", %7s", "ownerid"
+  printf ", %11s", "partitioned"
+  printf "\n"
+end
+
+define pastix-print-cblk-one
+  set language c
+  set $cblk = (SolverCblk *) ($arg0)
+  set $blok = $cblk->fblokptr
+  printf "%5s, ", ($cblk->cblktype & CBLK_FANIN) ? "FANIN" : (($cblk->cblktype & CBLK_RECV) ? "RECV" : "CBLK" )
+  printf "%2s, ", ($cblk->cblktype & CBLK_TASKS_2D) ? "O" : "N"
+  printf "%5d-%5d, ", $cblk->fcolnum, $cblk->lcolnum
+  printf "%7d, %7d ", $cblk->lcolidx, $cblk->bcscnum
+  printf ", %7d", $blok->fcblknm
+  printf ", %7d", $cblk->ownerid
+  printf ", %9s%c%c", " ", ($cblk->partitioned & 0x1) ? 'O' : 'N', ($cblk->partitioned & 0x2) ? 'O' : 'N'
+  printf "\n"
+end
+
+define pastix-print-blok
+  set language c
+  set $blok = (SolverBlok *) ($arg0)
+  pastix-print-blok-header 0
+  pastix-print-blok-one $blok
+end
+
+define pastix-print-bloks-in-cblk
+  set language c
+  set $cblk = (SolverCblk *) ($arg0)
+  set $blok = $cblk->fblokptr
+  set $lblok = $cblk[1].fblokptr
+  set $i = 0
+  pastix-print-blok-header 1
+  while $blok < $lblok
+    printf "%4d ", $i
+    pastix-print-blok-one $blok
+    set $i = $i + 1
+    set $blok = $blok + 1
+  end
+end
+
+define pastix-print-cblk
+  set language c
+  set $cblk = (SolverCblk *) ($arg0)
+  pastix-print-cblk-header 0
+  pastix-print-cblk-one $cblk
+  pastix-print-bloks-in-cblk $cblk
+end
+
+define pastix-print-cblks
+  set language c
+  set $datacode = (SolverMatrix *) ($arg0)
+  set $ncblk = $datacode->cblknbr
+  set $cblk = (SolverCblk *) ($datacode->cblktab)
+  set $i = 0
+  pastix-print-cblk-header 1
+  while $i < $ncblk
+    printf "%4d ", $i
+    pastix-print-cblk-one $cblk
+    set $i = $i + 1
+    set $cblk =  (SolverCblk *) ($datacode->cblktab + $i)
+  end
+end
+
+document pastix
+List of PaStiX-specific gdb functions:
+pastix-print-blok                  Prints information about a given block
+pastix-print-cblk                  Prints information about a given column block
+pastix-print-bloks-in-cblk         Prints information about all blocks in given column block
+pastix-print-cblks                 Prints information about all column blocks
+end

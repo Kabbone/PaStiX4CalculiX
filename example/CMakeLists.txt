@@ -52,7 +52,14 @@ set (EXAMPLES
   simple_solve_and_refine.c
   simple_trans.c
   step-by-step.c
+)
+
+if ( PASTIX_WITH_MPI )
+  set( EXAMPLES
+    ${EXAMPLES}
+    mpi_subproblems.c
   )
+endif()
 
 foreach (_file ${EXAMPLES})
   get_filename_component(_name_we ${_file} NAME_WE)
