@@ -19,6 +19,8 @@ sonarqube:
           test_seq_sched_linux, test_mpi_sched_linux,
           test_seq_wrapper_linux, test_mpi_wrapper_linux,
           coverage]
+  variables:
+    GIT_DEPTH: "0"
   script:
     - ${CI_PROJECT_DIR}/tools/analysis.sh
   artifacts:
