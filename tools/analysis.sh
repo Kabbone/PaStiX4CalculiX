@@ -53,14 +53,14 @@ ls $BUILDDIR/*.json
 # create the sonarqube config file
 cat > sonar-project.properties << EOF
 sonar.host.url=https://sonarqube.inria.fr/sonarqube
-sonar.login=$SONARQUBE_LOGIN
+sonar.qualitygate.wait=true
 
 sonar.links.homepage=$CI_PROJECT_URL
 sonar.links.scm=$CI_REPOSITORY_URL
 sonar.links.ci=$CI_PROJECT_URL/pipelines
 sonar.links.issue=$CI_PROJECT_URL/issues
 
-sonar.projectKey=${CI_PROJECT_NAMESPACE}:${CI_PROJECT_NAME}
+sonar.projectKey=pastix_pastix_AZJlwL_NsbMNg1jXgz1q
 sonar.projectDescription=Parallel Sparse direct Solver
 sonar.projectVersion=6.4.1
 
