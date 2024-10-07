@@ -210,7 +210,7 @@ brew install ${PASTIX_SRC_DIR}/tools/homebrew/pastix6.rb
 Once the compilation finished, you can setup your environment easily
 by sourcing the provided file:
 ```sh
-source ${PASTIX_DIR}/bin/pastix_env.sh
+source ${PASTIX_DIR}/bin/pastix_env
 ```
 
 And then, you can run your favorite example:
@@ -225,7 +225,7 @@ to use PaStiX](https://solverstack.gitlabpages.inria.fr/pastix/md_docs_doxygen_c
 
 As said previously, you can setup your environment easily by sourcing the provided file:
 ```sh
-source ${PASTIX_DIR}/bin/pastix_env.sh
+source ${PASTIX_DIR}/bin/pastix_env
 ```
 
 But, you can also have a look on examples installed to see how to link PaStiX within your code :

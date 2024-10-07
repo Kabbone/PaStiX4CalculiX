@@ -119,7 +119,7 @@ runtime systems based on the available one(s).
 Once the compilation finished, you can setup your environment easily
 by sourcing the provided file:
 ```sh
-source $PASTIX_DIR/bin/pastix_env.sh
+source $PASTIX_DIR/bin/pastix_env
 ```
 And then, you can run your favorite example:
 ```sh
