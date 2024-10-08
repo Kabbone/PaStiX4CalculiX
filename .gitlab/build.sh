@@ -51,7 +51,7 @@ if [[ "$SYSTEM" != "windows" ]]; then
   else
     source ${CI_PROJECT_DIR}/.gitlab/env.sh ${VERSION}
     unset SPM_DIR # Make sure we don't use the installed spm
-    if [ ! -z "$SPM_DIR" ]; then source $SPM_DIR/bin/spm_env.sh; fi
+    if [ ! -z "$SPM_DIR" ]; then source $SPM_DIR/bin/spm_env; fi
     cmake -B build -S . -DPASTIX_CI_VERSION=${VERSION} -DPASTIX_CI_BRANCH=${BRANCH} \
           -C .gitlab/ci-test-initial-cache.cmake \
           || fatal

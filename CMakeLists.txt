@@ -1017,7 +1017,7 @@ generate_pkgconfig_files(
   "${CMAKE_CURRENT_SOURCE_DIR}/pastixf.pc.in"
   PROJECTNAME PASTIX )
 
-generate_env_file( PROJECTNAME PASTIX )
+generate_newenv_file( PACKAGE PaStiX )
 
 # PaStiX auto-completion file
 # (see https://github.com/scop/bash-completion)

@@ -99,7 +99,7 @@ install directory of PaStiX.
 Once the compilation finished, you can setup your environment easily
 by sourcing the provided file:
 ```sh
-source $PASTIX_DIR/bin/pastix_env.sh
+source $PASTIX_DIR/bin/pastix_env
 ```
 
 ### How to use PaStiX with EZTrace
