@@ -1,8 +1,6 @@
 ---
 sonarqube:
   stage: analyze
-  tags: ["docker"]
-  interruptible: true
   rules:
     - if: ($CI_PIPELINE_SOURCE == "schedule" )
       when: never
@@ -25,7 +23,7 @@ sonarqube:
     - ${CI_PROJECT_DIR}/tools/analysis.sh
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 180 minutes
+    expire_in: 1 week
     paths:
       - filelist.txt
       - ${CI_PROJECT_NAME}-cppcheck.xml

@@ -1,7 +1,6 @@
 ---
-image: registry.gitlab.inria.fr/solverstack/docker/distrib
-
 stages:
+  - docker
   - pre
   - build
   - test
@@ -23,8 +22,9 @@ before_script:
   - git submodule update --init --recursive
 
 include:
-  - .gitlab/preliminary.yml
   - .gitlab/common.yml
+  - .gitlab/preliminary.yml
+  - .gitlab/docker.yml
   - .gitlab/build.yml
   - .gitlab/test.yml
   - .gitlab/test_wrapper.yml

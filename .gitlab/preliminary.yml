@@ -4,7 +4,6 @@
 ---
 preliminary_checks:
   stage: pre
-  interruptible: true
   rules:
     - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
   parallel:

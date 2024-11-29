@@ -1,7 +1,6 @@
 ---
 package:
   stage: deploy
-  tags: ["docker"]
   dependencies: []
   only:
     - /^release-.*$/

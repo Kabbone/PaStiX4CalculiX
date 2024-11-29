@@ -14,11 +14,7 @@ if [[ "$SYSTEM" == "linux" ]]; then
   #export INCLUDE_PATH=$INCLUDE_PATH:$OPENMPI_DIR/include
   #export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$OPENMPI_DIR/lib/pkgconfig
 
-  #StarPU
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$STARPU_DIR/lib
-  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$STARPU_DIR/lib/pkgconfig
-
-  #PaRSEC
+  #PaRSEC mpi version (default is shm)
   if [ "$VERSION" == "mpi" ]
   then
     export PARSEC_DIR=/home/gitlab/install/parsec-mpi
@@ -29,10 +25,6 @@ if [[ "$SYSTEM" == "linux" ]]; then
   export PATH=$PARSEC_DIR/bin:$PATH
   export LD_LIBRARY_PATH=$PARSEC_DIR/lib:$LD_LIBRARY_PATH
   export PKG_CONFIG_PATH=$PARSEC_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
-  #Scotch
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCOTCH_DIR/lib
-  #Metis
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$METIS_DIR/lib
 
 elif [[ "$SYSTEM" == "windows" ]]; then
 
