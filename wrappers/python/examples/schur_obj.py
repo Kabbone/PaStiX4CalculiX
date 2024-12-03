@@ -45,7 +45,7 @@ solver = pastix.solver(verbose=2)
 solver.schur(A, schurlist)
 S = solver.S
 f = solver.schur_forward(x)
-y = la.solve(S, f, sym_pos=True, lower=True)
+y = la.solve(S, f, lower=True, assume_a='pos')
 x = solver.schur_backward(y)
 
 # Check the solution

@@ -92,7 +92,7 @@ if factotype == pastix.factotype.LU:
     pastix.rhsSchurGet( pastix_data, Px, schur_x )
 
     # 3- Solve the Schur complement part
-    schur_x = la.solve(S, schur_x, sym_pos=False)
+    schur_x = la.solve(S, schur_x, assume_a='gen')
 
     pastix.rhsSchurSet( pastix_data, schur_x, Px )
 
@@ -106,7 +106,7 @@ else:
     pastix.rhsSchurGet( pastix_data, Px, schur_x )
 
     # 3- Solve the Schur complement part
-    schur_x = la.solve(S, schur_x, sym_pos=True, lower=True)
+    schur_x = la.solve(S, schur_x, lower=True, assume_a='pos')
 
     pastix.rhsSchurSet( pastix_data, schur_x, Px )
 
