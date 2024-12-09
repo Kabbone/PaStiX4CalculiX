@@ -11,7 +11,7 @@
 #  @date 2024-07-05
 #
 ###
-
+set -e
 set -x
 
 PROJECT=$CI_PROJECT_NAME
@@ -40,7 +40,7 @@ export UNDEFINITIONS="$UNDEFINITIONS -UBUILDING_STARPU -UPASTIX_WITH_STARPU_DIST
 export UNDEFINITIONS="$UNDEFINITIONS -UNAPA_SOPALIN"
 
 # run cppcheck analysis
-CPPCHECK_OPT=" -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingInclude ${UNDEFINITIONS}"
+CPPCHECK_OPT=" -v -f --language=c --platform=unix64 --enable=all --xml --xml-version=2 --suppress=missingIncludeSystem ${UNDEFINITIONS}"
 cppcheck $CPPCHECK_OPT --file-list=./filelist_none.txt 2> ${PROJECT}-cppcheck.xml
 cppcheck $CPPCHECK_OPT -DPRECISION_s -UPRECISION_d -UPRECISION_c -UPRECISION_z -UPRECISION_z --file-list=./filelist_s.txt 2>> ${PROJECT}-cppcheck.xml
 cppcheck $CPPCHECK_OPT -UPRECISION_s -DPRECISION_d -UPRECISION_c -UPRECISION_z -UPRECISION_z --file-list=./filelist_d.txt 2>> ${PROJECT}-cppcheck.xml
@@ -48,7 +48,10 @@ cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -DPRECISION_c -UPRECISION_z -
 cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -UPRECISION_c -DPRECISION_z -UPRECISION_z --file-list=./filelist_z.txt 2>> ${PROJECT}-cppcheck.xml
 cppcheck $CPPCHECK_OPT -UPRECISION_s -UPRECISION_d -UPRECISION_c -UPRECISION_z -DPRECISION_p --file-list=./filelist_p.txt 2>> ${PROJECT}-cppcheck.xml
 
-ls $BUILDDIR/*.json
+# merge all different compile_commands.json files into one single file for sonarqube
+ls $BUILDDIR/compile_commands-*.json
+jq -s 'map(.[])' $BUILDDIR/compile_commands-*.json > ${PROJECT}-compile_commands.json
+ls ${PROJECT}-compile_commands.json
 
 # create the sonarqube config file
 cat > sonar-project.properties << EOF
@@ -79,7 +82,7 @@ sonar.cxx.gcc.reportPaths=${PROJECT}-build*.log
 sonar.cxx.xunit.reportPaths=${PROJECT}-test*junit.xml
 sonar.cxx.cobertura.reportPaths=${PROJECT}-coverage.xml
 sonar.cxx.cppcheck.reportPaths=${PROJECT}-cppcheck.xml
-sonar.cxx.jsonCompilationDatabase=$BUILDDIR/compile_commands.json
+sonar.cxx.jsonCompilationDatabase=${PROJECT}-compile_commands.json
 EOF
 echo "====== sonar-project.properties ============"
 cat sonar-project.properties

@@ -1,7 +1,6 @@
 ---
 pages:
   stage: deploy
-  tags: ["docker"]
   extends: .only-master
   dependencies: []
   artifacts:

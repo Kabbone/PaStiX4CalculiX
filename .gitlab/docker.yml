@@ -1,0 +1,10 @@
+---
+docker:
+  stage: docker
+  image: docker
+  when: manual
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -f .gitlab/Dockerfile -t $CI_REGISTRY_IMAGE $PWD
+    - docker push $CI_REGISTRY_IMAGE

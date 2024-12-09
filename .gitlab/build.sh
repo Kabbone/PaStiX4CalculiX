@@ -11,19 +11,22 @@
 #  @date 2024-07-05
 #
 ###
-
-fatal() {
-    echo "$0: error occurred, exit"
-    exit 1
-}
-
+set -e
 set -x
 
-#
-# Build the project
-#
-if [[ "$SYSTEM" != "windows" ]]; then
-  if [[ "$SYSTEM" == "macosx" ]]; then
+# Configure with CMake
+case $SYSTEM in
+
+  linux)
+    source ${CI_PROJECT_DIR}/.gitlab/env.sh ${VERSION}
+    unset SPM_DIR # Make sure we don't use the installed spm
+    if [ ! -z "$SPM_DIR" ]; then source $SPM_DIR/bin/spm_env; fi
+    cmake -B build -S . -DPASTIX_CI_VERSION=${VERSION} -DPASTIX_CI_BRANCH=${BRANCH} \
+          -C .gitlab/ci-test-initial-cache.cmake
+    cp build/compile_commands.json build/compile_commands-${VERSION}.json
+    ;;
+
+  macosx)
     # ensure scotch and starpu are installed
     for dep in scotch starpu
     do
@@ -46,28 +49,28 @@ if [[ "$SYSTEM" != "windows" ]]; then
     # we do not have parsec installed on the macosx machine
     cmake -B build -S . -DPASTIX_CI_VERSION=${VERSION} -DPASTIX_CI_BRANCH=${BRANCH} \
           -C .gitlab/ci-test-initial-cache.cmake \
-          -DMORSE_ENABLE_COVERAGE=OFF -DBLA_PREFER_PKGCONFIG=ON -DPASTIX_WITH_PARSEC=OFF \
-          || fatal
-  else
-    source ${CI_PROJECT_DIR}/.gitlab/env.sh ${VERSION}
-    unset SPM_DIR # Make sure we don't use the installed spm
-    if [ ! -z "$SPM_DIR" ]; then source $SPM_DIR/bin/spm_env; fi
-    cmake -B build -S . -DPASTIX_CI_VERSION=${VERSION} -DPASTIX_CI_BRANCH=${BRANCH} \
-          -C .gitlab/ci-test-initial-cache.cmake \
-          || fatal
-    cp compile_commands.json compile_commands-${VERSION}.json
-  fi
-else
-  # on windows the mpi_f08 interface is missing, see https://www.scivision.dev/windows-mpi-msys2/
-  # default scotch in windows msys2 is int32
-  # do not use static libraries because executables are too large and the build
-  # directory can reach more than 10Go
-  cmake -GNinja -B build -S . -DCMAKE_INSTALL_PREFIX=$PWD/install-${VERSION} \
-        -DPASTIX_WITH_MPI=OFF -DPASTIX_INT64=OFF -DBUILD_SHARED_LIBS=ON \
-        || fatal
-fi
-cmake --build build -j 4 || fatal
-cmake --install build || fatal
+          -DMORSE_ENABLE_COVERAGE=OFF -DBLA_PREFER_PKGCONFIG=ON -DPASTIX_WITH_PARSEC=OFF
+    ;;
+
+  windows)
+    # on windows the mpi_f08 interface is missing, see https://www.scivision.dev/windows-mpi-msys2/
+    # default scotch in windows msys2 is int32
+    # do not use static libraries because executables are too large and the build
+    # directory can reach more than 10Go
+    cmake -GNinja -B build -S . -DCMAKE_INSTALL_PREFIX=$PWD/install-${VERSION} \
+          -DPASTIX_WITH_MPI=OFF -DPASTIX_INT64=OFF -DBUILD_SHARED_LIBS=ON
+    ;;
+  *)
+    echo "The SYSTEM environment variable is $SYSTEM. It is not one of: linux, macosx, windows -> exit 1."
+    exit 1
+    ;;
+esac
+
+# Compile
+cmake --build build -j 4 > /dev/null
+
+# Install
+cmake --install build
 
 #
 # Check link to pastix
@@ -97,9 +100,9 @@ elif [[ "$SYSTEM" == "windows" ]]; then
 fi
 
 # 1) using cmake:
-./link_cmake.sh $PWD/../../install-${VERSION} || fatal
+./link_cmake.sh $PWD/../../install-${VERSION}
 # 2) using pkg-config:
-./link_pkgconfig.sh $PWD/../../install-${VERSION} || fatal
+./link_pkgconfig.sh $PWD/../../install-${VERSION}
 
 # Clean the check build
-rm -r build || fatal
+rm -r build

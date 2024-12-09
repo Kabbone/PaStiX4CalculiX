@@ -4,7 +4,6 @@
 ---
 coverage:
   stage: coverage
-  tags: ["docker"]
   extends: .only-master-mr
   needs: [test_seq, test_mpi,
           test_seq_sched_linux, test_mpi_sched_linux,
@@ -14,7 +13,7 @@ coverage:
   coverage: /^\s*lines......:\s*\d+.\d+\%/
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 180 minutes
+    expire_in: 1 week
     paths:
       - ${CI_PROJECT_NAME}-*.lcov
       - ${CI_PROJECT_NAME}.lcov

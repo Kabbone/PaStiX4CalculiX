@@ -39,7 +39,7 @@ test_mpi_sched_linux:
     - bash .gitlab/test.sh | tee ${LOGNAME}.log
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 180 minutes
+    expire_in: 1 week
     paths:
       - ${LOGNAME}.log
     reports:
@@ -78,7 +78,7 @@ test_seq_shm_macosx:
     - bash -lc .gitlab/test.sh | tee -a "$env:LOGNAME.log"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 180 minutes
+    expire_in: 1 week
     paths:
       - ${LOGNAME}.log
     reports:

@@ -1,8 +1,6 @@
 ---
 coverity:
   stage: analyze
-  tags: ["docker", "large"]
-  interruptible: true
   rules:
     - if: ($CI_PIPELINE_SOURCE == "schedule" )
       when: never
@@ -17,20 +15,17 @@ coverity:
   dependencies: []
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    expire_in: 180 minutes
+    expire_in: 1 week
     paths:
       - ${CI_PROJECT_NAME}.tgz
   variables:
     VERSION: mpi
   script:
-    - mkdir -p build-coverity
-    - cd build-coverity
-    - cmake -DPASTIX_CI_VERSION=${VERSION}
+    - cmake -B build-coverity -DPASTIX_CI_VERSION=${VERSION}
             -C ${CI_PROJECT_DIR}/.gitlab/ci-test-initial-cache.cmake
-            ${CI_PROJECT_DIR}
-    - cov-build --dir ../cov-int make -j 4
-    - cd ..
-    - tar czvf ${CI_PROJECT_NAME}.tgz cov-int
+            -S ${CI_PROJECT_DIR}
+    - cov-build --dir cov-int/ cmake --build build-coverity -j4
+    - tar czvf ${CI_PROJECT_NAME}.tgz cov-int/
     - curl --form token=$COVERITY_TOKEN
            --form email=mathieu.faverge@inria.fr
            --form file=@${CI_PROJECT_NAME}.tgz
