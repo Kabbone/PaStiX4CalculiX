@@ -90,10 +90,10 @@ int isched_nohwloc_world_size()
 
 int isched_nohwloc_socketsnbr()
 {
-    pastix_warning( "The socket number can not be automatically detected \
-                     if hwloc is not activated. If you want to compute \
-                     the energy with papi please define the number of \
-                     sockets with iparm_socket_nbr." );
+    pastix_print_warning( "The socket number can not be automatically detected"
+                          "if hwloc is not activated. If you want to compute "
+                          "the energy with papi please define the number of "
+                          "sockets with iparm_socket_nbr.\n" );
     return 0;
 }
 
