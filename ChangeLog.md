@@ -1,3 +1,6 @@
+# pastix-6.4.1
+ - no-hwloc: Fix issue reported by PETSC on incorrect call to pastix_warning
+
 # pastix-6.4.0
  - starpu/mpi: protect mpi calls in non mpi compilation
  - wrapper/fortran: Add error stop in case of error to raise numerical errors during CI
