@@ -13,22 +13,13 @@ coverity:
       when: manual
       allow_failure: true
   dependencies: []
+  variables:
+    SYSTEM: linux
+    VERSION: mpi
+  script:
+    - ./tools/coverity.sh
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     expire_in: 1 week
     paths:
       - ${CI_PROJECT_NAME}.tgz
-  variables:
-    VERSION: mpi
-  script:
-    - cmake -B build-coverity -DPASTIX_CI_VERSION=${VERSION}
-            -C ${CI_PROJECT_DIR}/.gitlab/ci-test-initial-cache.cmake
-            -S ${CI_PROJECT_DIR}
-    - cov-build --dir cov-int/ cmake --build build-coverity -j4
-    - tar czvf ${CI_PROJECT_NAME}.tgz cov-int/
-    - curl --form token=$COVERITY_TOKEN
-           --form email=mathieu.faverge@inria.fr
-           --form file=@${CI_PROJECT_NAME}.tgz
-           --form version="`git rev-parse --short HEAD`"
-           --form description=""
-           https://scan.coverity.com/builds?project=PaStiX
