@@ -80,6 +80,13 @@ do
     sed -i "\:^$file:d" filelist.txt
 done
 
+# Remove specific systems header files (our config: linux, x86_64, gcc)
+sed -i '/^common\/sys\/atomic-macosx.h/d' filelist.txt
+sed -i '/^common\/sys\/atomic-ppc-bgp.h/d' filelist.txt
+sed -i '/^common\/sys\/atomic-ppc.h/d' filelist.txt
+sed -i '/^common\/sys\/atomic-x86_32.h/d' filelist.txt
+sed -i '/^common\/sys\/atomic-xlc.h/d' filelist.txt
+
 # Generate separated list of files for generated files and non generated files
 rm -f filelist_[sdcz].txt
 for name in $(cat filelist.txt)
