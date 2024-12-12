@@ -172,9 +172,6 @@ option(PASTIX_GENERATE_MODEL
 option(PASTIX_WITH_FORTRAN
   "Enable Fortran files/interface/examples to be compiled" ON)
 
-cmake_dependent_option(PASTIX_THREAD_COMM
- "Enable the specific communication thread (requires PASTIX_WITH_MPI)" ON "PASTIX_WITH_MPI" OFF)
-
 option(PASTIX_INT64
   "Choose between int32 and int64 for integer representation" ON)
 

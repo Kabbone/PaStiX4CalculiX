@@ -17,8 +17,8 @@ PASTIX_SRC_DIR=${CI_PROJECT_DIR:-$PWD}
 source ${PASTIX_SRC_DIR}/.gitlab/env.sh ${VERSION}
 
 cmake -B build-${VERSION} \
-      -C ${PASTIX_SRC_DIR}/.gitlab/ci-test-initial-cache.cmake \
       -D PASTIX_CI_VERSION=${VERSION} \
+      -C ${PASTIX_SRC_DIR}/.gitlab/ci-test-initial-cache.cmake \
       -S ${PASTIX_SRC_DIR}
 
 cov-build --dir cov-int/ cmake --build build-${VERSION} -j4

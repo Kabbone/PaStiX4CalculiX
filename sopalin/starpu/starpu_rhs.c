@@ -192,7 +192,7 @@ starpu_rhs_init( SolverMatrix *solvmtx,
         nrow = cblk_colnbr( cblk );
 
         pastix_starpu_rhs_data_register( handler, rhsdesc->mpitag, solvmtx->clustnum, cblk, rhsdesc->typesze,
-                                         nrow, ncol, rhsb->b + (cblk->lcolidx * rhsdesc->typesze), rhsb->ld );
+                                         nrow, ncol, (char*)rhsb->b + (cblk->lcolidx * rhsdesc->typesze), rhsb->ld );
     }
 
     rhsb->starpu_desc = rhsdesc;
