@@ -116,13 +116,13 @@ int main (int argc, char **argv)
         free(filename);
 
         if ( (dim1 != dim2) || (dim1 != dim3) ){
-            fprintf(stderr, "Grid ordering can be used with a cube only, dimensions are %ld %ld %ld\n", dim1, dim2, dim3);
+            fprintf(stderr, "Grid ordering can be used with a cube only, dimensions are %ld %ld %ld\n", (long)dim1, (long)dim2, (long)dim3);
             return EXIT_FAILURE;
         }
 
         nschur = dim1 * dim2;
 
-        printf("We put %ld vertices in the schur\n", nschur);
+        printf("We put %ld vertices in the schur\n", (long)nschur);
 
         pastix_int_t i, mp;
         pastix_int_t baseval = spmFindBase(spm);
