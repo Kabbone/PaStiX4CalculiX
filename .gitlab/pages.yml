@@ -3,14 +3,11 @@ pages:
   stage: deploy
   extends: .only-master
   dependencies: []
+  variables:
+    SYSTEM: linux
+    VERSION: mpi
+  script:
+    - ./tools/pages.sh
   artifacts:
     paths:
       - public
-  script:
-    - mkdir -p build
-    - cd build
-    - cmake .. -DPASTIX_CI_VERSION=doc
-            -C ../.gitlab/ci-test-initial-cache.cmake
-    - make -j5
-    - make docs | tee ${CI_PROJECT_NAME}-doc.log
-    - mv docs/out/html ../public/
