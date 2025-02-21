@@ -394,6 +394,7 @@ starpu_task_blok_zadd_fanin( sopalin_data_t    *sopalin_data,
 #endif
         0);
 
+    (void)sopalin_data;
     (void)prio;
 }
 
