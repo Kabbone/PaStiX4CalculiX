@@ -4,6 +4,7 @@
 ---
 preliminary_checks:
   stage: pre
+  image: registry.gitlab.inria.fr/solverstack/docker/pre
   rules:
     - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
   parallel:
