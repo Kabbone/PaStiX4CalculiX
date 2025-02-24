@@ -262,12 +262,12 @@ option(PASTIX_LR_TESTINGS
 # PaStiX depends on the libm
 #---------------------------
 find_package(M REQUIRED)
-morse_export_imported_target(MORSE M m pastix)
+morse_export_imported_target(MORSE::M m pastix)
 
 # PaStiX depends on LAPACKE and CBLAS
 #------------------------------------
 find_package(CBLAS REQUIRED)
-morse_export_imported_target(MORSE CBLAS cblas pastix)
+morse_export_imported_target(MORSE::CBLAS cblas pastix)
 
 ## Tests requires TMG lib to generate random matrices.
 if (PASTIX_LR_TESTINGS)
@@ -276,13 +276,13 @@ if (PASTIX_LR_TESTINGS)
 else()
   find_package(LAPACKE REQUIRED)
 endif()
-morse_export_imported_target(MORSE LAPACKE lapacke pastix)
+morse_export_imported_target(MORSE::LAPACKE lapacke pastix)
 
 # PaStiX depends on HwLoc
 #---------------------------
 find_package(HWLOC)
 if (NOT BUILD_SHARED_LIBS)
-  morse_export_imported_target(MORSE HWLOC hwloc pastix)
+  morse_export_imported_target(MORSE::HWLOC hwloc pastix)
 endif()
 set(HAVE_HWLOC ${HWLOC_FOUND})
 
@@ -290,9 +290,9 @@ set(HAVE_HWLOC ${HWLOC_FOUND})
 #---------------------------
 if (PASTIX_WITH_MPI)
   find_package(MPI REQUIRED)
-  morse_export_imported_target(MPI MPI_C mpic pastix)
+  morse_export_imported_target(MPI::MPI_C mpic pastix)
   if (PASTIX_WITH_FORTRAN)
-    morse_export_imported_target(MPI MPI_Fortran mpif pastix)
+    morse_export_imported_target(MPI::MPI_Fortran mpif pastix)
   endif()
 
   set(pastix_mpiexec ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --bind-to none --host localhost:4 )
@@ -356,8 +356,8 @@ if( PASTIX_WITH_CUDA )
         "\n   CUDA_LIBRARIES to be found. Be sure you have"
         "\n   libcuda with your distribution of CUDA.")
     endif()
-    morse_export_imported_target(CUDA CUDA cuda pastix)
-    morse_export_imported_target(CUDA CUBLAS cublas pastix)
+    morse_export_imported_target(CUDA::CUDA cuda pastix)
+    morse_export_imported_target(CUDA::CUBLAS cublas pastix)
   endif (CUDA_FOUND)
 endif()
 
@@ -369,7 +369,7 @@ if (PASTIX_WITH_STARPU)
   set( PASTIX_STARPU_VERSION "1.4" CACHE STRING "oldest STARPU version desired" )
 
   find_package( STARPU ${PASTIX_STARPU_VERSION} REQUIRED )
-  morse_export_imported_target(MORSE STARPU starpu pastix)
+  morse_export_imported_target(MORSE::STARPU starpu pastix)
 
   get_target_property(CMAKE_REQUIRED_LIBRARIES MORSE::STARPU INTERFACE_LINK_LIBRARIES)
 
@@ -385,7 +385,7 @@ endif (PASTIX_WITH_STARPU)
 if (PASTIX_WITH_PARSEC)
 
   find_package( PARSEC REQUIRED )
-  morse_export_imported_target(MORSE PARSEC parsec pastix)
+  morse_export_imported_target(MORSE::PARSEC parsec pastix)
 
   # Add the index-array dep management option to PTGCC compilation flags.
   include(RulesJDF)
@@ -415,7 +415,7 @@ endif ()
 if (PASTIX_ORDERING_PTSCOTCH)
   find_package(PTSCOTCH)
   if (NOT BUILD_SHARED_LIBS)
-    morse_export_imported_target(MORSE PTSCOTCH ptscotch pastix)
+    morse_export_imported_target(MORSE::PTSCOTCH ptscotch pastix)
   endif()
 
   if (PTSCOTCH_FOUND)
@@ -432,7 +432,7 @@ endif()
 if (PASTIX_ORDERING_SCOTCH)
   find_package(SCOTCH REQUIRED)
   if (NOT BUILD_SHARED_LIBS)
-    morse_export_imported_target(MORSE SCOTCH scotch pastix)
+    morse_export_imported_target(MORSE::SCOTCH scotch pastix)
   endif()
 
   if (SCOTCH_FOUND)
@@ -455,7 +455,7 @@ endif()
 if (PASTIX_ORDERING_METIS)
   find_package(METIS REQUIRED)
   if (NOT BUILD_SHARED_LIBS)
-    morse_export_imported_target(MORSE METIS metis pastix)
+    morse_export_imported_target(MORSE::METIS metis pastix)
   endif()
 
   if (METIS_FOUND)
