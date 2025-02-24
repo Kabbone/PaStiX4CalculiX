@@ -34,8 +34,6 @@ enums = {
     'description' : "PaStiX fortran 90 wrapper to define enums and datatypes",
     'header'      : """
 
-#include "pastix/config.h"
-
   use, intrinsic :: iso_c_binding
 #if defined(PASTIX_WITH_MPI)
   use :: mpi_f08, only : MPI_Comm, MPI_COMM_WORLD
