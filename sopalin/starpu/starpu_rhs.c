@@ -158,10 +158,9 @@ starpu_rhs_init( SolverMatrix *solvmtx,
     starpu_data_handle_t *handler;
     SolverCblk           *cblk;
     pastix_int_t          cblknbr, cblknum, nrow;
-    pastix_int_t          ncol = rhsb->n;
-    int64_t               tag_desc;
+    pastix_int_t          ncol    = rhsb->n;
+    starpu_rhs_desc_t    *rhsdesc = rhsb->starpu_desc;
 
-    starpu_rhs_desc_t *rhsdesc = rhsb->starpu_desc;
     if ( rhsdesc != NULL ) {
         if ( ( ncol    == rhsdesc->ncol ) &&
              ( rhsb->b == rhsdesc->dataptr ) ) {
@@ -176,8 +175,10 @@ starpu_rhs_init( SolverMatrix *solvmtx,
     cblknbr = solvmtx->cblknbr;
 
 #if defined(PASTIX_WITH_MPI)
-    tag_desc           = ( (int64_t) ( solvmtx->gcblknbr + solvmtx->gfanincblknbr ) );
-    rhsdesc->mpitag    = pastix_starpu_tag_book( tag_desc );
+    {
+        int64_t tag_desc = ( (int64_t) ( solvmtx->gcblknbr + solvmtx->gfanincblknbr ) );
+        rhsdesc->mpitag  = pastix_starpu_tag_book( tag_desc );
+    }
 #endif
     rhsdesc->ncol      = ncol;
     rhsdesc->typesze   = pastix_size_of( typesize );

@@ -267,7 +267,10 @@ starpu_ztrsm_sp1dplus( pastix_data_t      *pastix_data,
                        const args_solve_t *enums )
 {
     SolverMatrix *datacode = sopalin_data->solvmtx;
-    SolverCblk   *cblk, *fcblk;
+    SolverCblk   *cblk;
+#if defined(PASTIX_WITH_MPI)
+    SolverCblk   *fcblk;
+#endif
     pastix_int_t  i, cblknbr, prio;
 
     /* Backward like */
