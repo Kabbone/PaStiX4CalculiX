@@ -16,6 +16,10 @@
  * @ingroup wrap_fortran
  *
  */
+/* Disable the command line option if any to avoid double declaration applied to fortran files */
+#ifdef SPM_WITH_MPI
+#undef SPM_WITH_MPI
+#endif
 #include "common.h"
 
 static inline PASTIX_Comm
