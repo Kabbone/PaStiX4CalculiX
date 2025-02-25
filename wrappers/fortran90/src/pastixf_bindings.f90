@@ -3,14 +3,14 @@
 !>
 !> PaStiX Fortran to C bindings module
 !>
-!> @copyright 2017-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!> @copyright 2017-2025 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
 !>
 !> @version 6.4.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
 !> @author Selmane Lebdaoui
-!> @date 2024-06-08
+!> @date 2025-02-24
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>

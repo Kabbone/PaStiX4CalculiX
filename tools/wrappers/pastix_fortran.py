@@ -34,8 +34,6 @@ enums = {
     'description' : "PaStiX fortran 90 wrapper to define enums and datatypes",
     'header'      : """
 
-#include "pastix/config.h"
-
   use, intrinsic :: iso_c_binding
 #if defined(PASTIX_WITH_MPI)
   use :: mpi_f08, only : MPI_Comm, MPI_COMM_WORLD
@@ -115,6 +113,9 @@ function pastixGetCptrFromValue(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFromValue
@@ -135,6 +136,9 @@ function pastixGetCptrFrom1dArray(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFrom1dArray
@@ -155,6 +159,9 @@ function pastixGetCptrFrom2dArray(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFrom2dArray

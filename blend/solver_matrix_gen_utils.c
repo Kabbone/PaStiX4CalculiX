@@ -341,6 +341,7 @@ solvMatGen_fill_localnums( const symbol_matrix_t *symbmtx,
 #endif
 
     memFree_null( localindex );
+    (void)faninbloknbr;
 }
 
 /**

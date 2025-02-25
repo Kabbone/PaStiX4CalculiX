@@ -513,8 +513,8 @@ def print_auxiliary_variables( s, function ):
         maxlent = max( maxlent, len(function['rettype']['f_type'])-2 )
 
     fmt = s*" " + "%-" + str(maxlent) + "s :: %s"
-    string = ""
 
+    string = ""
     for arg in function['args']:
         if not arg['has_aux']:
             continue
@@ -597,7 +597,7 @@ def print_auxiliary_fini( s, function ):
 
     return string
 
-def iso_c_interface_type(arg, return_value, list):
+def iso_c_interface_type(arg, return_value, list, instruct=False):
     """Generate a declaration for a variable in the interface."""
 
     if (arg[1] == "*" or arg[1] == "**"):
@@ -609,6 +609,8 @@ def iso_c_interface_type(arg, return_value, list):
         f_type = "type(c_ptr)"
     else:
         f_type = types_dict[arg[0]]['ftype']
+        if instruct and f_type == "type(MPI_Comm)":
+            f_type = "integer(kind=PASTIX_MPI_COMM_KIND)"
 
     if (not return_value and arg[1] != "**"):
         f_type += ", "
@@ -753,7 +755,7 @@ class wrap_fortran:
         slist = []
         length= 0
         for j in range(1,len(struct)):
-            length = max( length, iso_c_interface_type(struct[j], True, slist) )
+            length = max( length, iso_c_interface_type(struct[j], True, slist, instruct=True) )
         fmt = s*" " + "%-"+ str(length) + "s :: %s\n"
 
         # loop over the arguments of the struct

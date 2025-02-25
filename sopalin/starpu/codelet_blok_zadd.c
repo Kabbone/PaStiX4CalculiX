@@ -106,6 +106,7 @@ static void (*blok_zadd_callback)(void*) = cl_profiling_callback;
 #endif /* defined( PASTIX_STARPU_PROFILING ) */
 
 
+#if defined(PASTIX_STARPU_COST_PER_ARCH)
 /**
  *******************************************************************************
  *
@@ -161,10 +162,11 @@ fct_blok_zadd_cost( struct starpu_task           *task,
     (void)nimpl;
     return cost;
 }
+#endif
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 static struct starpu_perfmodel starpu_blok_zadd_model = {
-#if defined( PASTIX_STARPU_COST_PER_ARCH )
+#if defined(PASTIX_STARPU_COST_PER_ARCH)
     .type               = STARPU_PER_ARCH,
     .arch_cost_function = fct_blok_zadd_cost,
 #else
@@ -394,6 +396,7 @@ starpu_task_blok_zadd_fanin( sopalin_data_t    *sopalin_data,
 #endif
         0);
 
+    (void)sopalin_data;
     (void)prio;
 }
 

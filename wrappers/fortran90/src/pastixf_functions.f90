@@ -3,14 +3,14 @@
 !>
 !> PaStiX Fortran interface implementation
 !>
-!> @copyright 2017-2024 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
+!> @copyright 2017-2025 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria,
 !>                      Univ. Bordeaux. All rights reserved.
 !>
 !> @version 6.4.0
 !> @author Mathieu Faverge
 !> @author Tony Delarue
 !> @author Selmane Lebdaoui
-!> @date 2024-06-08
+!> @date 2025-02-24
 !>
 !> This file has been automatically generated with gen_wrappers.py
 !>
@@ -32,6 +32,9 @@ function pastixGetCptrFromValue(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFromValue
@@ -52,6 +55,9 @@ function pastixGetCptrFrom1dArray(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFrom1dArray
@@ -72,6 +78,9 @@ function pastixGetCptrFrom2dArray(input) result(output)
      output = c_loc( t )
   type is (real(c_float))
      output = c_loc( t )
+  class default
+     write(0,*) "Input pointer is not pointing to one of double complex, single complex, double real or single real"
+     output = c_null_ptr
   end select
 
 end function pastixGetCptrFrom2dArray

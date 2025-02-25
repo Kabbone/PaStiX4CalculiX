@@ -535,10 +535,10 @@ else()
 endif()
 
 # Disable restrict (temporary)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Drestrict=")
-
-if( PASTIX_COMPILE_OPTIONS )
-  add_compile_options( ${PASTIX_COMPILE_OPTIONS} )
+if(CMAKE_C_FLAGS)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Drestrict=")
+else()
+  set(CMAKE_C_FLAGS "-Drestrict=")
 endif()
 
 #Configuration header

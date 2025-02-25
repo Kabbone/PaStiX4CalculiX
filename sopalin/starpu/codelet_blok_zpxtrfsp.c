@@ -99,6 +99,7 @@ static void (*blok_zpxtrfsp_callback)(void*) = cl_profiling_callback;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#if defined(PASTIX_STARPU_COST_PER_ARCH)
 /**
  *******************************************************************************
  *
@@ -152,6 +153,7 @@ fct_blok_zpxtrfsp_cost( struct starpu_task           *task,
     (void)nimpl;
     return cost;
 }
+#endif
 
 static struct starpu_perfmodel starpu_blok_zpxtrfsp_model = {
 #if defined(PASTIX_STARPU_COST_PER_ARCH)
