@@ -1,6 +1,7 @@
 ---
 coverity:
   stage: analyze
+  tags: ['ci.inria.fr', 'linux', 'large']
   rules:
     - if: ($CI_PIPELINE_SOURCE == "schedule" )
       when: never

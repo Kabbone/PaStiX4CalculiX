@@ -18,6 +18,7 @@ sonarqube:
           test_seq_wrapper_linux, test_mpi_wrapper_linux,
           coverage]
   variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
     GIT_DEPTH: "0"
   script:
     - ${CI_PROJECT_DIR}/tools/analysis.sh

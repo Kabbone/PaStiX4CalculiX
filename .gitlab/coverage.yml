@@ -8,6 +8,8 @@ coverage:
   needs: [test_seq, test_mpi,
           test_seq_sched_linux, test_mpi_sched_linux,
           test_seq_wrapper_linux, test_mpi_wrapper_linux]
+  variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
   script:
     - ${CI_PROJECT_DIR}/tools/coverage.sh ${CI_PROJECT_NAME}
   coverage: /^\s*lines......:\s*\d+.\d+\%/

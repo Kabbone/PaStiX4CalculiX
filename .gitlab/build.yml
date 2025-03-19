@@ -1,7 +1,11 @@
 ---
 .build_script_linux:
   stage: build
+  tags: ['ci.inria.fr', 'linux', 'large']
   extends: .only-master-mr
+  variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME
+    SYSTEM: linux
   script:
     - bash .gitlab/build.sh | tee ${LOGNAME}.log
   artifacts:
@@ -12,14 +16,12 @@
 build_seq:
   extends: .build_script_linux
   variables:
-    SYSTEM: linux
     VERSION: seq
     LOGNAME: "pastix-build-${SYSTEM}-${VERSION}"
 
 build_mpi:
   extends: .build_script_linux
   variables:
-    SYSTEM: linux
     VERSION: mpi
     LOGNAME: "pastix-build-${SYSTEM}-${VERSION}"
 
@@ -27,6 +29,8 @@ build_mpi:
   stage: build
   tags: ["macosx"]
   extends: .only-master-mr
+  variables:
+    SYSTEM: macosx
   script:
     - bash .gitlab/build.sh | tee ${LOGNAME}.log
   artifacts:
@@ -42,14 +46,12 @@ build_mpi:
 build_seq_macosx:
   extends: .build_script_macosx
   variables:
-    SYSTEM: macosx
     VERSION: seq
     LOGNAME: "pastix-build-${SYSTEM}-${VERSION}"
 
 build_mpi_macosx:
   extends: .build_script_macosx
   variables:
-    SYSTEM: macosx
     VERSION: mpi
     LOGNAME: "pastix-build-${SYSTEM}-${VERSION}"
 
@@ -57,6 +59,10 @@ build_mpi_macosx:
   stage: build
   tags: ['windows']
   extends: .only-master-mr
+  variables:
+    SYSTEM: windows
+    CHERE_INVOKING: "yes"
+    MSYSTEM: UCRT64
   script:
     - bash -lc .gitlab/build.sh | tee "$env:LOGNAME.log"
   artifacts:
@@ -72,8 +78,5 @@ build_mpi_macosx:
 build_seq_windows:
   extends: .build_script_windows
   variables:
-    SYSTEM: windows
-    CHERE_INVOKING: "yes"
-    MSYSTEM: UCRT64
     VERSION: seq
     LOGNAME: "pastix-build-${SYSTEM}-${VERSION}"
