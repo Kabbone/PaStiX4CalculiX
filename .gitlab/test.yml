@@ -9,7 +9,6 @@ test_seq_sched_linux:
       - RUN: shm
         SCHED: [0, 1, 2, 3, 4]
   variables:
-    SYSTEM: linux
     VERSION: seq
     LOGNAME: "pastix-test-${SYSTEM}-${VERSION}-${RUN}-sched${SCHED}"
     TESTS_RESTRICTION: "-R ^${RUN}_.*_sched${SCHED}"
@@ -26,7 +25,6 @@ test_mpi_sched_linux:
       - RUN: [mpi_dst]
         SCHED: [0, 1, 3, 4]
   variables:
-    SYSTEM: linux
     VERSION: mpi
     LOGNAME: "pastix-test-${SYSTEM}-${VERSION}-${RUN}-sched${SCHED}"
     TESTS_RESTRICTION: "-R ^${RUN}_.*_sched${SCHED}"
@@ -35,6 +33,8 @@ test_mpi_sched_linux:
   stage: test
   tags: ["macosx"]
   extends: .only-master-mr
+  variables:
+    SYSTEM: macosx
   script:
     - bash .gitlab/test.sh | tee ${LOGNAME}.log
   artifacts:
@@ -53,7 +53,6 @@ test_seq_shm_macosx:
   extends: .test_script_macosx
   needs: [build_seq_macosx]
   variables:
-    SYSTEM: macosx
     VERSION: seq
     RUN: shm
     LOGNAME: "pastix-test-${SYSTEM}-${VERSION}-${RUN}"
@@ -64,7 +63,6 @@ test_seq_shm_macosx:
   extends: .test_script_macosx
   needs: [build_mpi_macosx]
   variables:
-    SYSTEM: macosx
     VERSION: mpi
     RUN: mpi_dst
     LOGNAME: "pastix-test-${SYSTEM}-${VERSION}-${RUN}"
@@ -74,6 +72,10 @@ test_seq_shm_macosx:
   stage: test
   tags: ["windows"]
   extends: .only-master-mr
+  variables:
+    SYSTEM: windows
+    CHERE_INVOKING: "yes"
+    MSYSTEM: UCRT64
   script:
     - bash -lc .gitlab/test.sh | tee -a "$env:LOGNAME.log"
   artifacts:
@@ -93,9 +95,6 @@ test_seq_shm_macosx:
   extends: .test_script_windows
   needs: [build_seq_windows]
   variables:
-    SYSTEM: windows
-    CHERE_INVOKING: "yes"
-    MSYSTEM: UCRT64
     VERSION: seq
     RUN: shm
     LOGNAME: "pastix-test-${SYSTEM}-${VERSION}-${RUN}"
