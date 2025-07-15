@@ -1,5 +1,6 @@
 # pastix-6.4.1
  - no-hwloc: Fix issue reported by PETSC on incorrect call to pastix_warning
+ - core_zgemdm: Fix comment about the workspace size.
 
 # pastix-6.4.0
  - starpu/mpi: protect mpi calls in non mpi compilation
