@@ -126,8 +126,8 @@
  *
  * @param[in] LWORK
  *       The length of WORK.
- *       On entry, if transA = PastixTrans and transB = PastixTrans then
- *       LWORK >= max(1, K*(N+1)). Otherwise LWORK >= max(1, (M+1)*K).
+ *       On entry, if transA = PastixNoTrans then LWORK >= max(1, K*(M+1)),
+ *       Otherwise LWORK >= max(1, (N+1)*K).
  *
  *******************************************************************************
  *
@@ -196,7 +196,7 @@ core_zgemdm( pastix_trans_t            transA,
         if (transA == PastixNoTrans ) {
             pastix_print_error( "LWORK %d < (M=%d+1)*K=%d ", LWORK, M, K );
         }
-        if (transA == PastixNoTrans ) {
+        if (transA != PastixNoTrans ) {
             pastix_print_error( "LWORK %d < (N=%d+1)*K=%d ", LWORK, N, K );
         }
         return -17;
