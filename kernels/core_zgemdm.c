@@ -127,7 +127,7 @@
  * @param[in] LWORK
  *       The length of WORK.
  *       On entry, if transA = PastixTrans and transB = PastixTrans then
- *       LWORK >= max(1, K*N). Otherwise LWORK >= max(1, M*K).
+ *       LWORK >= max(1, K*(N+1)). Otherwise LWORK >= max(1, (M+1)*K).
  *
  *******************************************************************************
  *
