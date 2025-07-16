@@ -13,9 +13,7 @@ check_required_components(PASTIX)
 include(CMakeFindDependencyMacro)
 
 # Threads
-if( NOT @BUILD_SHARED_LIBS@ )
-  find_dependency(Threads)
-endif()
+find_dependency(Threads)
 
 # Math libraries
 include("${CMAKE_CURRENT_LIST_DIR}/mTargets.cmake")
