@@ -79,10 +79,13 @@ cuda_add_cublas_to_target( pastix_kernels_cuda )
 
 set_property(TARGET pastix_kernels_cuda PROPERTY CXX_STANDARD 11)
 
+get_target_property(SPM_INCLUDE_DIRS SPM::spm INTERFACE_INCLUDE_DIRECTORIES)
+
 target_include_directories( pastix_kernels_cuda PRIVATE
   $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}>
   $<BUILD_INTERFACE:${PASTIX_BINARY_DIR}>
-  $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}/common> )
+  $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}/common>
+  $<BUILD_INTERFACE:${SPM_INCLUDE_DIRS}> )
 
 target_include_directories( pastix_kernels_cuda PUBLIC
   $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}/include>
@@ -90,9 +93,6 @@ target_include_directories( pastix_kernels_cuda PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:include> )
-
-# TODO: Add PRIVATE dependency when updating the FindCUDA
-target_link_libraries( pastix_kernels_cuda SPM::spm )
 
 # export target pastix_kernels
 # ----------------------------
