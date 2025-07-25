@@ -86,6 +86,10 @@ target_include_directories( pastix_kernels_cuda PRIVATE
   $<BUILD_INTERFACE:${PASTIX_BINARY_DIR}>
   $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}/common>
   $<BUILD_INTERFACE:${SPM_INCLUDE_DIRS}> )
+if (PASTIX_WITH_MPI AND MPI_C_INCLUDE_DIRS)
+  target_include_directories( pastix_kernels_cuda PRIVATE
+    $<BUILD_INTERFACE:${MPI_C_INCLUDE_DIRS}> )
+endif()
 
 target_include_directories( pastix_kernels_cuda PUBLIC
   $<BUILD_INTERFACE:${PASTIX_SOURCE_DIR}/include>
