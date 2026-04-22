@@ -187,6 +187,109 @@ pastix_subtask_spm2bcsc( pastix_data_t *pastix_data,
  *
  * @ingroup pastix_numfact
  *
+ * @brief Updates the bcsc values without rebuilding the structural data.
+ *
+ * This function is a fast alternative to pastix_subtask_spm2bcsc() for the
+ * case where the sparsity pattern of the matrix has not changed since the last
+ * factorization.  It reuses the existing col2cblk, coltab, and rowtab arrays
+ * and only refills Lvalues / Uvalues from the new spm->values.
+ *
+ * If the bcsc has not yet been initialised (STEP_CSC2BCSC not set), this
+ * function transparently falls back to a full pastix_subtask_spm2bcsc() call.
+ *
+ * After this call the user must still run pastix_subtask_bcsc2ctab() and
+ * pastix_subtask_sopalin() to complete the re-factorization.
+ *
+ * This routine is affected by the following parameters:
+ *   IPARM_VERBOSE, IPARM_FACTORIZATION, IPARM_FREE_CSCUSER.
+ *
+ *******************************************************************************
+ *
+ * @param[inout] pastix_data
+ *          The pastix_data structure that describes the solver instance.
+ *
+ * @param[inout] spm
+ *          The sparse matrix with updated values and unchanged sparsity.
+ *
+ *******************************************************************************
+ *
+ * @retval PASTIX_SUCCESS on successful exit,
+ * @retval PASTIX_ERR_BADPARAMETER if one parameter is incorrect.
+ *
+ *******************************************************************************/
+int
+pastix_subtask_spm2bcsc_values( pastix_data_t *pastix_data,
+                                spmatrix_t    *spm )
+{
+    double time;
+
+    /*
+     * Check parameters
+     */
+    if ( pastix_data == NULL ) {
+        pastix_print_error( "pastix_subtask_spm2bcsc_values: wrong pastix_data parameter" );
+        return PASTIX_ERR_BADPARAMETER;
+    }
+    if ( spm == NULL ) {
+        pastix_print_error( "pastix_subtask_spm2bcsc_values: wrong spm parameter" );
+        return PASTIX_ERR_BADPARAMETER;
+    }
+    if ( !(pastix_data->steps & STEP_ANALYSE) ) {
+        pastix_print_error( "pastix_subtask_spm2bcsc_values: All steps from pastix_task_init() to pastix_task_blend() have to be called before calling this function" );
+        return PASTIX_ERR_BADPARAMETER;
+    }
+
+    /*
+     * If the bcsc has not yet been initialised fall back to the full init so
+     * that the caller does not need to special-case the first factorization.
+     */
+    if ( !(pastix_data->steps & STEP_CSC2BCSC) || (pastix_data->bcsc == NULL) ) {
+        return pastix_subtask_spm2bcsc( pastix_data, spm );
+    }
+
+    /*
+     * Recompute the matrix norm (values have changed).
+     */
+    {
+        pastix_data->dparm[ DPARM_A_NORM ] = spmNorm( SpmFrobeniusNorm, spm );
+        if ( pastix_data->iparm[IPARM_VERBOSE] > PastixVerboseNo ) {
+            pastix_print( pastix_data->inter_node_procnum, 0,
+                          "    ||A||_2  =                            %e\n",
+                          pastix_data->dparm[ DPARM_A_NORM ] );
+        }
+    }
+
+    /*
+     * Update only the values in the existing bcsc (no structural rebuild).
+     */
+    time = bcscUpdateValues( spm,
+                             pastix_data->ordemesh,
+                             pastix_data->solvmatr,
+                             (pastix_data->iparm[IPARM_FACTORIZATION] == PastixFactLU),
+                             pastix_data->bcsc );
+
+    if ( pastix_data->iparm[IPARM_VERBOSE] > PastixVerboseNot ) {
+        pastix_print( pastix_data->inter_node_procnum, 0, OUT_BCSC_TIME, time );
+    }
+
+    if ( pastix_data->iparm[IPARM_FREE_CSCUSER] ) {
+        spmExit( spm );
+    }
+
+    /*
+     * Invalidate steps that depend on bcsc values; keep STEP_CSC2BCSC since the
+     * bcsc structure itself is still valid.
+     */
+    pastix_data->steps &= ~(STEP_BCSC2CTAB | STEP_NUMFACT);
+
+    return PASTIX_SUCCESS;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup pastix_numfact
+ *
  * @brief Fill the internal solver matrix structure.
  *
  * This step is linked with the pastix_subtask_sopalin() since this structure is
@@ -683,17 +786,34 @@ pastix_task_numfact( pastix_data_t *pastix_data,
                       pastixFactotypeStr( iparm[IPARM_FACTORIZATION] ) );
     }
 
-    /* Invalidate upcoming steps */
-    steps = ~(STEP_CSC2BCSC  |
-              STEP_BCSC2CTAB |
-              STEP_NUMFACT   |
-              STEP_SOLVE     |
-              STEP_REFINE    );
-    pastix_data->steps &= steps;
+    /*
+     * If pastix_subtask_spm2bcsc_values() has already populated the bcsc with
+     * fresh values (STEP_CSC2BCSC set, STEP_BCSC2CTAB not yet set), skip the
+     * full spm2bcsc conversion and preserve the STEP_CSC2BCSC flag.
+     */
+    if ( (pastix_data->steps & STEP_CSC2BCSC) &&
+         !(pastix_data->steps & STEP_BCSC2CTAB) )
+    {
+        /* Invalidate only downstream steps, keep STEP_CSC2BCSC */
+        steps = ~(STEP_BCSC2CTAB |
+                  STEP_NUMFACT   |
+                  STEP_SOLVE     |
+                  STEP_REFINE    );
+        pastix_data->steps &= steps;
+    }
+    else {
+        /* Invalidate upcoming steps */
+        steps = ~(STEP_CSC2BCSC  |
+                  STEP_BCSC2CTAB |
+                  STEP_NUMFACT   |
+                  STEP_SOLVE     |
+                  STEP_REFINE    );
+        pastix_data->steps &= steps;
 
-    rc = pastix_subtask_spm2bcsc( pastix_data, spm );
-    if (rc != PASTIX_SUCCESS) {
-        return rc;
+        rc = pastix_subtask_spm2bcsc( pastix_data, spm );
+        if (rc != PASTIX_SUCCESS) {
+            return rc;
+        }
     }
 
     rc = pastix_subtask_bcsc2ctab( pastix_data );

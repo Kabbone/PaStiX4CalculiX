@@ -31,6 +31,13 @@ void bcsc_zinit( const spmatrix_t     *spm,
                  pastix_bcsc_t        *bcsc,
                  pastix_int_t          valuesize );
 
+void bcsc_zupdatevalues( const spmatrix_t     *spm,
+                         const pastix_order_t *ord,
+                         const SolverMatrix   *solvmtx,
+                         int                   initAt,
+                         pastix_bcsc_t        *bcsc,
+                         pastix_int_t          valuesize );
+
 #if defined(PASTIX_WITH_MPI)
 void bcsc_zstore_data( const spmatrix_t     *spm,
                        const pastix_order_t *ord,

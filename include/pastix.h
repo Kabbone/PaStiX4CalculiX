@@ -122,8 +122,10 @@ int pastix_subtask_blend     ( pastix_data_t    *pastix_data );
 /*
  * Numerical factorization subtasks
  */
-int pastix_subtask_spm2bcsc  ( pastix_data_t *pastix_data,
-                               spmatrix_t    *spm );
+int pastix_subtask_spm2bcsc        ( pastix_data_t *pastix_data,
+                                     spmatrix_t    *spm );
+int pastix_subtask_spm2bcsc_values ( pastix_data_t *pastix_data,
+                                     spmatrix_t    *spm );
 int pastix_subtask_bcsc2ctab ( pastix_data_t *pastix_data );
 int pastix_subtask_sopalin   ( pastix_data_t *pastix_data );
 

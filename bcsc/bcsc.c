@@ -1742,10 +1742,14 @@ bcsc_init_struct( const spmatrix_t   *spm,
 {
     pastix_int_t       *col2cblk  = NULL;
 
-    bcsc->mtxtype = spm->mtxtype;
-    bcsc->flttype = spm->flttype;
-    bcsc->gN      = spm->gNexp;
-    bcsc->n       = solvmtx->nodenbr;
+    bcsc->mtxtype     = spm->mtxtype;
+    bcsc->flttype     = spm->flttype;
+    bcsc->gN          = spm->gNexp;
+    bcsc->n           = solvmtx->nodenbr;
+    bcsc->Urowtab     = NULL;
+    bcsc->spm2bcsc_L  = NULL;
+    bcsc->spm2bcsc_Lt = NULL;
+    bcsc->spm2bcsc_U  = NULL;
 
     /*
      * Creates the col2cblk array which associates each column to a cblk
@@ -1895,6 +1899,196 @@ bcsc_init( const spmatrix_t     *spm,
  * @return The time spent to initialize the bcsc structure.
  *
  *******************************************************************************/
+/**
+ *******************************************************************************
+ *
+ * @ingroup bcsc_internal
+ *
+ * @brief Binary search for @p target in the sorted array rowtab[lo..hi).
+ *
+ * @return The index p such that rowtab[p] == target.
+ *
+ *******************************************************************************/
+static inline pastix_int_t
+bcsc_find_pos( const pastix_int_t *rowtab, pastix_int_t lo, pastix_int_t hi,
+               pastix_int_t target )
+{
+    while ( lo < hi ) {
+        pastix_int_t mid = lo + ( (hi - lo) >> 1 );
+        if ( rowtab[mid] < target ) lo = mid + 1;
+        else                         hi = mid;
+    }
+    assert( rowtab[lo] == target );
+    return lo;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Builds the spm->values[k] → bcsc position scatter maps.
+ *
+ * For each scalar index k into spm->values (expanded by degrees of freedom),
+ * this function records the corresponding position in Lvalues (spm2bcsc_L),
+ * in Lvalues for the transposed entry (spm2bcsc_Lt, symmetric/hermitian only),
+ * and in Uvalues for the transposed entry (spm2bcsc_U, general LU only).
+ *
+ * The maps are built via binary search in the already-sorted rowtab / Urowtab
+ * arrays produced by bcsc_init().  Entries belonging to a remote MPI rank
+ * receive the sentinel value -1; they are handled by the normal exchange path
+ * in bcscUpdateValues().  Diagonal entries that are skipped by bcsc_zinit_At()
+ * for sym/herm matrices also receive -1 in spm2bcsc_Lt.
+ *
+ * Must be called after bcsc_init() has completed (rowtab sorted, coltab in
+ * column-start state).
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix used for the initial bcscInit() call.
+ *
+ * @param[in] ord
+ *          The ordering (permtab must still be valid).
+ *
+ * @param[in] solvmtx
+ *          The solver matrix (cblktab must still be valid).
+ *
+ * @param[inout] bcsc
+ *          On entry, a fully initialised bcsc with sorted rowtab/Urowtab.
+ *          On exit, spm2bcsc_L, spm2bcsc_Lt, and spm2bcsc_U are populated.
+ *
+ *******************************************************************************/
+void
+bcsc_build_spm2bcsc( const spmatrix_t     *spm,
+                     const pastix_order_t *ord,
+                     const SolverMatrix   *solvmtx,
+                     pastix_bcsc_t        *bcsc )
+{
+    pastix_int_t *col2cblk = bcsc->col2cblk;
+    pastix_int_t *rowtab   = bcsc->rowtab;
+    pastix_int_t *Urowtab  = bcsc->Urowtab;
+    pastix_int_t *loc2glob = spm->loc2glob;
+    pastix_int_t *colptr   = spm->colptr;
+    pastix_int_t *rowptr   = spm->rowptr;
+    pastix_int_t *dofs     = spm->dofs;
+    pastix_int_t  dof      = spm->dof;
+    pastix_int_t  baseval  = spm->baseval;
+    pastix_int_t  nnzexp   = spm->nnzexp;
+    pastix_int_t  j, kk, k;
+    int doLt = ( spm->mtxtype != SpmGeneral );
+    int doU  = ( spm->mtxtype == SpmGeneral ) && ( Urowtab != NULL );
+
+    MALLOC_INTERN( bcsc->spm2bcsc_L, nnzexp, pastix_int_t );
+    bcsc->spm2bcsc_Lt = NULL;
+    bcsc->spm2bcsc_U  = NULL;
+    if ( doLt ) { MALLOC_INTERN( bcsc->spm2bcsc_Lt, nnzexp, pastix_int_t ); }
+    if ( doU  ) { MALLOC_INTERN( bcsc->spm2bcsc_U,  nnzexp, pastix_int_t ); }
+
+    k = 0;
+    for ( j = 0; j < spm->n; j++, colptr++, loc2glob++ ) {
+        pastix_int_t jg   = ( spm->loc2glob == NULL ) ? j : *loc2glob - baseval;
+        pastix_int_t jgp  = ord->permtab[jg];
+        pastix_int_t jgpe = ( dof > 0 ) ? jgp * dof : dofs[jg] - baseval;
+        pastix_int_t dofj = ( dof > 0 ) ? dof : dofs[jg+1] - dofs[jg];
+
+        pastix_int_t itercblk_L = col2cblk[jgpe];
+        SolverCblk  *cblk_L     = ( itercblk_L >= 0 ) ? solvmtx->cblktab + itercblk_L : NULL;
+        pastix_int_t *coltab_L  = ( cblk_L != NULL  ) ? bcsc->cscftab[cblk_L->bcscnum].coltab : NULL;
+
+        for ( kk = colptr[0]; kk < colptr[1]; kk++, rowptr++ ) {
+            pastix_int_t ig   = *rowptr - baseval;
+            pastix_int_t igp  = ord->permtab[ig];
+            pastix_int_t igpe = ( dof > 0 ) ? igp * dof : dofs[ig] - baseval;
+            pastix_int_t dofi = ( dof > 0 ) ? dof : dofs[ig+1] - dofs[ig];
+            pastix_int_t n_scalars = dofi * dofj;
+            pastix_int_t k_base    = k;
+            pastix_int_t idofj, idofi;
+
+            /* --- spm2bcsc_L: direct (A) scatter positions --- */
+            if ( cblk_L != NULL ) {
+                pastix_int_t colidx0 = jgpe - cblk_L->fcolnum;
+                for ( idofj = 0; idofj < dofj; idofj++ ) {
+                    pastix_int_t colidx = colidx0 + idofj;
+                    pastix_int_t lo     = coltab_L[colidx];
+                    pastix_int_t hi     = coltab_L[colidx + 1];
+                    for ( idofi = 0; idofi < dofi; idofi++, k++ ) {
+                        pastix_int_t p = bcsc_find_pos( rowtab, lo, hi, igpe + idofi );
+                        bcsc->spm2bcsc_L[k] = p;
+                    }
+                }
+            }
+            else {
+                pastix_int_t s;
+                for ( s = 0; s < n_scalars; s++, k++ ) {
+                    bcsc->spm2bcsc_L[k] = -1;  /* remote entry */
+                }
+            }
+
+            /* --- spm2bcsc_Lt: transposed (At) scatter positions (sym/herm) --- */
+            if ( doLt ) {
+                if ( ig == jg ) {
+                    /* diagonal block: bcsc_zinit_At() skips these */
+                    pastix_int_t s;
+                    for ( s = 0; s < n_scalars; s++ ) {
+                        bcsc->spm2bcsc_Lt[k_base + s] = -1;
+                    }
+                }
+                else {
+                    pastix_int_t itercblk_t = col2cblk[igpe];
+                    if ( itercblk_t < 0 ) {
+                        pastix_int_t s;
+                        for ( s = 0; s < n_scalars; s++ ) {
+                            bcsc->spm2bcsc_Lt[k_base + s] = -1;
+                        }
+                    }
+                    else {
+                        SolverCblk   *cblk_t   = solvmtx->cblktab + itercblk_t;
+                        pastix_int_t *coltab_t  = bcsc->cscftab[cblk_t->bcscnum].coltab;
+                        pastix_int_t  colidx0_t = igpe - cblk_t->fcolnum;
+                        for ( idofj = 0; idofj < dofj; idofj++ ) {
+                            pastix_int_t row_t = jgpe + idofj;
+                            for ( idofi = 0; idofi < dofi; idofi++ ) {
+                                pastix_int_t colidx_t = colidx0_t + idofi;
+                                pastix_int_t lo = coltab_t[colidx_t];
+                                pastix_int_t hi = coltab_t[colidx_t + 1];
+                                pastix_int_t p  = bcsc_find_pos( rowtab, lo, hi, row_t );
+                                bcsc->spm2bcsc_Lt[k_base + idofj * dofi + idofi] = p;
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* --- spm2bcsc_U: transposed (At) scatter positions (general LU) --- */
+            if ( doU ) {
+                pastix_int_t itercblk_t = col2cblk[igpe];
+                if ( itercblk_t < 0 ) {
+                    pastix_int_t s;
+                    for ( s = 0; s < n_scalars; s++ ) {
+                        bcsc->spm2bcsc_U[k_base + s] = -1;
+                    }
+                }
+                else {
+                    SolverCblk   *cblk_t   = solvmtx->cblktab + itercblk_t;
+                    pastix_int_t *coltab_t  = bcsc->cscftab[cblk_t->bcscnum].coltab;
+                    pastix_int_t  colidx0_t = igpe - cblk_t->fcolnum;
+                    for ( idofj = 0; idofj < dofj; idofj++ ) {
+                        pastix_int_t row_t = jgpe + idofj;
+                        for ( idofi = 0; idofi < dofi; idofi++ ) {
+                            pastix_int_t colidx_t = colidx0_t + idofi;
+                            pastix_int_t lo = coltab_t[colidx_t];
+                            pastix_int_t hi = coltab_t[colidx_t + 1];
+                            pastix_int_t p  = bcsc_find_pos( Urowtab, lo, hi, row_t );
+                            bcsc->spm2bcsc_U[k_base + idofj * dofi + idofi] = p;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert( k == nnzexp );
+    (void)solvmtx;
+}
+
 double
 bcscInit( const spmatrix_t     *spm,
           const pastix_order_t *ord,
@@ -1909,6 +2103,84 @@ bcscInit( const spmatrix_t     *spm,
 
     clockStart(time);
     bcsc_init( spm, ord, solvmtx, initAt, bcsc );
+    bcsc_build_spm2bcsc( spm, ord, solvmtx, bcsc );
+    clockStop(time);
+
+    return time;
+}
+
+/**
+ *******************************************************************************
+ *
+ * @brief Updates only the values arrays of an already initialised block csc.
+ *
+ * This function is used to re-populate bcsc->Lvalues and bcsc->Uvalues from
+ * a new spm->values array when the sparsity pattern has not changed since the
+ * last bcscInit() call.  All structural data (col2cblk, coltab, rowtab) is
+ * reused without modification.
+ *
+ *******************************************************************************
+ *
+ * @param[in] spm
+ *          The sparse matrix with updated values.  Must have the same sparsity
+ *          pattern as the spm used in the previous bcscInit() call.
+ *
+ * @param[in] ord
+ *          The ordering (unchanged from the original factorization).
+ *
+ * @param[in] solvmtx
+ *          The solver matrix structure (unchanged).
+ *
+ * @param[in] initAt
+ *          Non-zero if Uvalues must be updated (PastixFactLU case).
+ *
+ * @param[inout] bcsc
+ *          On entry, the fully initialised bcsc (coltab in column-start state).
+ *          On exit, Lvalues and Uvalues contain the updated values.
+ *
+ *******************************************************************************
+ *
+ * @return The time spent updating the bcsc values.
+ *
+ *******************************************************************************/
+double
+bcscUpdateValues( const spmatrix_t     *spm,
+                  const pastix_order_t *ord,
+                  const SolverMatrix   *solvmtx,
+                  pastix_int_t          initAt,
+                  pastix_bcsc_t        *bcsc )
+{
+    double        time = 0.;
+    pastix_int_t  valuesize;
+    bcsc_cblk_t  *last;
+
+    assert( ord->baseval == 0 );
+    assert( ord->vertnbr == spm->gN );
+    assert( bcsc != NULL );
+    assert( bcsc->cscftab != NULL );
+
+    /* Recover total entry count from the existing coltab (column-start state). */
+    last      = bcsc->cscftab + bcsc->cscfnbr - 1;
+    valuesize = last->coltab[ last->colnbr ];
+
+    clockStart(time);
+    switch( spm->flttype ) {
+    case SpmFloat:
+        bcsc_supdatevalues( spm, ord, solvmtx, initAt, bcsc, valuesize );
+        break;
+    case SpmDouble:
+        bcsc_dupdatevalues( spm, ord, solvmtx, initAt, bcsc, valuesize );
+        break;
+    case SpmComplex32:
+        bcsc_cupdatevalues( spm, ord, solvmtx, initAt, bcsc, valuesize );
+        break;
+    case SpmComplex64:
+        bcsc_zupdatevalues( spm, ord, solvmtx, initAt, bcsc, valuesize );
+        break;
+    case SpmPattern:
+    default:
+        fprintf(stderr, "bcscUpdateValues: Error unknown floating type for input spm\n");
+    }
     clockStop(time);
 
     return time;
@@ -1941,6 +2213,7 @@ bcscExit( pastix_bcsc_t *bcsc )
 
     memFree_null( bcsc->cscftab );
     memFree_null( bcsc->rowtab );
+    memFree_null( bcsc->Urowtab );
 
     if ( (bcsc->Uvalues != NULL) &&
          (bcsc->Uvalues != bcsc->Lvalues) ) {
@@ -1948,6 +2221,9 @@ bcscExit( pastix_bcsc_t *bcsc )
     }
 
     memFree_null( bcsc->Lvalues );
+    memFree_null( bcsc->spm2bcsc_L );
+    memFree_null( bcsc->spm2bcsc_Lt );
+    memFree_null( bcsc->spm2bcsc_U );
 
     bcsc_exit_struct( bcsc );
 }

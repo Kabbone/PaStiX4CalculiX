@@ -1422,27 +1422,27 @@ bcsc_zinit( const spmatrix_t     *spm,
     if ( spm->mtxtype == SpmGeneral ) {
         /* If only the refinement is performed A^t is not required. */
         if ( initAt ) {
-            pastix_int_t *trowtab, i;
-            MALLOC_INTERN( bcsc->Uvalues, valuesize,  pastix_complex64_t );
-            MALLOC_INTERN( trowtab, valuesize, pastix_int_t );
+            pastix_int_t i;
+            MALLOC_INTERN( bcsc->Uvalues,  valuesize, pastix_complex64_t );
+            MALLOC_INTERN( bcsc->Urowtab,  valuesize, pastix_int_t );
 
             for (i=0; i<valuesize; i++) {
-                trowtab[i] = -1;
+                bcsc->Urowtab[i] = -1;
             }
-            nbelt = bcsc_zinit_At( spm, ord, solvmtx, trowtab, bcsc );
+            nbelt = bcsc_zinit_At( spm, ord, solvmtx, bcsc->Urowtab, bcsc );
 #if defined(PASTIX_WITH_MPI)
             if ( bcsc_comm != NULL ) {
-                nbelt_recv  = bcsc_zexchange_values_At(  spm, ord, solvmtx, trowtab, bcsc );
-                nbelt_recv += bcsc_zexchange_values_AAt( spm, ord, solvmtx, trowtab, bcsc );
+                nbelt_recv  = bcsc_zexchange_values_At(  spm, ord, solvmtx, bcsc->Urowtab, bcsc );
+                nbelt_recv += bcsc_zexchange_values_AAt( spm, ord, solvmtx, bcsc->Urowtab, bcsc );
                 nbelt += nbelt_recv;
             }
 #endif
             /* Restores the correct coltab arrays */
             bcsc_restore_coltab( bcsc );
 
-            /* Sorts the transposed csc */
-            bcsc_zsort( bcsc, trowtab, bcsc->Uvalues );
-            memFree( trowtab );
+            /* Sorts the transposed csc. Urowtab is kept as persistent row-index
+             * array for Uvalues (used by bcsc_build_spm2bcsc and bcscUpdateValues). */
+            bcsc_zsort( bcsc, bcsc->Urowtab, bcsc->Uvalues );
         }
     }
     /* In the case of SpmHermitian, conj is applied when used to save memory space */
@@ -1453,5 +1453,111 @@ bcsc_zinit( const spmatrix_t     *spm,
     (void) nbelt;
 #if defined(PASTIX_WITH_MPI)
     (void) nbelt_recv;
+#endif
+}
+
+/**
+ *******************************************************************************
+ *
+ * @ingroup bcsc_internal
+ *
+ * @brief Updates Lvalues / Uvalues using precomputed scatter maps.
+ *
+ * O(nnz) values-only update for the case where the sparsity pattern is
+ * unchanged since the last bcscInit() call.  Uses the spm2bcsc_L / spm2bcsc_Lt
+ * / spm2bcsc_U index maps built by bcsc_build_spm2bcsc() to scatter each
+ * spm->values[k] directly to its final sorted position in Lvalues or Uvalues.
+ * No fill traversal, no coltab advancement, and no sort are performed.
+ *
+ * @param[in] spm
+ *          The sparse matrix with updated values (same sparsity as before).
+ *
+ * @param[in] ord
+ *          Unused (kept for API symmetry with bcsc_zinit).
+ *
+ * @param[in] solvmtx
+ *          Unused (kept for API symmetry with bcsc_zinit).
+ *
+ * @param[in] initAt
+ *          Non-zero if Uvalues must be updated (general LU case).
+ *
+ * @param[inout] bcsc
+ *          On entry, a fully initialised bcsc with valid spm2bcsc_* maps.
+ *          On exit, Lvalues and Uvalues contain the new values.
+ *
+ * @param[in] valuesize
+ *          Unused (kept for API symmetry with bcsc_zinit).
+ *
+ *******************************************************************************/
+void
+bcsc_zupdatevalues( const spmatrix_t     *spm,
+                    const pastix_order_t *ord,
+                    const SolverMatrix   *solvmtx,
+                    int                   initAt,
+                    pastix_bcsc_t        *bcsc,
+                    pastix_int_t          valuesize )
+{
+    pastix_complex64_t *values  = (pastix_complex64_t *)( spm->values );
+    pastix_complex64_t *Lvalues = (pastix_complex64_t *)( bcsc->Lvalues );
+    pastix_int_t       *spm2L   = bcsc->spm2bcsc_L;
+    pastix_int_t        nnzexp  = spm->nnzexp;
+    pastix_int_t        k;
+#if defined(PASTIX_WITH_MPI)
+    bcsc_handle_comm_t *bcsc_comm = bcsc->bcsc_comm;
+#endif
+
+    /* MPI: re-exchange remote values using the already-known index maps. */
+#if defined(PASTIX_WITH_MPI)
+    if ( bcsc_comm != NULL ) {
+        bcsc_zexchange_values_A(   spm, ord, solvmtx, bcsc );
+        bcsc_zexchange_values_AAt( spm, ord, solvmtx, bcsc->rowtab, bcsc );
+        if ( spm->mtxtype != SpmGeneral ) {
+            bcsc_zexchange_values_At( spm, ord, solvmtx, bcsc->rowtab, bcsc );
+        }
+    }
+#endif
+
+    /* Direct scatter: overwrite Lvalues at their pre-sorted positions. */
+    for ( k = 0; k < nnzexp; k++ ) {
+        if ( spm2L[k] >= 0 ) {
+            Lvalues[ spm2L[k] ] = values[k];
+        }
+    }
+
+    /* Symmetric / hermitian: scatter the transposed (conjugated) contribution. */
+    if ( spm->mtxtype != SpmGeneral && bcsc->spm2bcsc_Lt != NULL ) {
+        pastix_complex64_t (*_bcsc_conj)(pastix_complex64_t) = __fct_id;
+        pastix_int_t *spm2Lt = bcsc->spm2bcsc_Lt;
+        if ( spm->mtxtype == SpmHermitian ) { _bcsc_conj = __fct_conj; }
+        if ( spm->mtxtype == SpmSymmetric ) { _bcsc_conj = __fct_id;   }
+        for ( k = 0; k < nnzexp; k++ ) {
+            if ( spm2Lt[k] >= 0 ) {
+                Lvalues[ spm2Lt[k] ] = _bcsc_conj( values[k] );
+            }
+        }
+    }
+
+    /* General LU: scatter the transposed contribution into Uvalues. */
+    if ( spm->mtxtype == SpmGeneral && initAt &&
+         bcsc->Uvalues != NULL && bcsc->spm2bcsc_U != NULL ) {
+        pastix_complex64_t *Uvalues = (pastix_complex64_t *)( bcsc->Uvalues );
+        pastix_int_t       *spm2U   = bcsc->spm2bcsc_U;
+#if defined(PASTIX_WITH_MPI)
+        if ( bcsc_comm != NULL ) {
+            bcsc_zexchange_values_At(  spm, ord, solvmtx, bcsc->Urowtab, bcsc );
+            bcsc_zexchange_values_AAt( spm, ord, solvmtx, bcsc->Urowtab, bcsc );
+        }
+#endif
+        for ( k = 0; k < nnzexp; k++ ) {
+            if ( spm2U[k] >= 0 ) {
+                Uvalues[ spm2U[k] ] = values[k];  /* SpmGeneral: no conjugation */
+            }
+        }
+    }
+    /* SpmHermitian: Uvalues == Lvalues, already updated above. */
+
+    (void)ord; (void)solvmtx; (void)valuesize;
+#if defined(PASTIX_WITH_MPI)
+    (void)bcsc_comm;
 #endif
 }

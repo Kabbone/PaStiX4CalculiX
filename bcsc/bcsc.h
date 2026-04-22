@@ -124,12 +124,23 @@ struct pastix_bcsc_s {
     pastix_int_t        cscfnbr;   /**< Number of column blocks.                                                           */
     bcsc_cblk_t        *cscftab;   /**< Array of Block column structures of size cscfnbr. (pastix_bcscFormat_t)            */
     pastix_int_t       *rowtab;    /**< Array of rows in the matrix.                                                       */
+    pastix_int_t       *Urowtab;   /**< Array of rows for Uvalues (general LU only, NULL otherwise).                       */
     void               *Lvalues;   /**< Array of values of the matrix A                                                    */
     void               *Uvalues;   /**< Array of values of the matrix A^t                                                  */
     pastix_int_t       *col2cblk;  /**< Array which gives the repartition of the solvmtx columns into the block structure. */
                                    /*   If the column k belongs to a remote block then col2cblk[k] = -(owner_proc + 1).    */
                                    /*   If the column k belongs to a local block then col2cblk[k] = block_num.             */
     bcsc_handle_comm_t *bcsc_comm; /**< Structure which handles the MPI communication (= NULL if PASTIX_WITH_MPI=OFF).     */
+    /**
+     * Scatter-index maps for O(nnz) value-only updates (bcscUpdateValues).
+     * spm2bcsc_L[k]  = position in Lvalues for the k-th scalar of spm->values (direct fill).
+     * spm2bcsc_Lt[k] = position in Lvalues for the transposed entry (sym/herm only; -1 for diagonal).
+     * spm2bcsc_U[k]  = position in Uvalues for the transposed entry (general LU only).
+     * Remote MPI entries carry the sentinel -1 and are handled by the normal exchange path.
+     */
+    pastix_int_t       *spm2bcsc_L;  /**< spm->values[k] → Lvalues position (direct contribution).    */
+    pastix_int_t       *spm2bcsc_Lt; /**< spm->values[k] → Lvalues position (transposed, sym/herm).   */
+    pastix_int_t       *spm2bcsc_U;  /**< spm->values[k] → Uvalues position (transposed, general LU). */
 };
 
 double bcscInit( const spmatrix_t     *spm,
@@ -137,6 +148,17 @@ double bcscInit( const spmatrix_t     *spm,
                  const SolverMatrix   *solvmtx,
                  pastix_int_t          initAt,
                  pastix_bcsc_t        *bcsc );
+
+double bcscUpdateValues( const spmatrix_t     *spm,
+                         const pastix_order_t *ord,
+                         const SolverMatrix   *solvmtx,
+                         pastix_int_t          initAt,
+                         pastix_bcsc_t        *bcsc );
+
+void bcsc_build_spm2bcsc( const spmatrix_t     *spm,
+                           const pastix_order_t *ord,
+                           const SolverMatrix   *solvmtx,
+                           pastix_bcsc_t        *bcsc );
 
 void   bcscExit( pastix_bcsc_t *bcsc );
 
